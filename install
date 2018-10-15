@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+sudo apt-get install -y python-pip
+sudo pip install --upgrade pip
+sudo pip install virtualenv
+virtualenv -p python3 ~/cv-env
+printf "\nalias cv_env='source /home/$USER/cv-env/bin/activate'" >> ~/.bash_aliases
+source ~/.bashrc
+source /home/$USER/cv-env/bin/activate
+pip install numpy scipy sklearn matplotlib torch torchvision torchsummary
+pip install -r requirements.txt
