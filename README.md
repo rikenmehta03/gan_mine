@@ -1,4 +1,4 @@
-# Generativa Adversarial Networks(GAN) with MINE: Mutual Information Neural Estimation
+# Generative Adversarial Networks(GAN) with MINE: Mutual Information Neural Estimation
 
 ## Environment setup & dependency installation
 ```
