@@ -8,19 +8,21 @@ from torch.autograd import Variable
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class GanTrainer():
-    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, d_loss, g_loss):
+    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, d_loss, g_loss, logger):
         self.generator = generator
         self.discriminator = discriminator
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.d_loss = d_loss
         self.g_loss = g_loss
+        self.logger = logger
+        self.test_noise = self._noise(32)
     
-    def _noise(self, size):
+    def _noise(self, num_samples):
         '''
         Generates a 1-d vector of gaussian sampled random values
         '''
-        n = Variable(torch.randn(size, 100, device=device))
+        n = Variable(torch.randn(num_samples, self.generator.noise_size, device=device)) # add noise_size as class variable of generator
         return n
     
     def _ones_target(self, size):
@@ -78,9 +80,11 @@ class GanTrainer():
 
         # Return error
         return error
-    
-    def train(self, data_loader, num_epochs, batch_size, checkpoint=False):
+        
+    def train(self, data_loader, num_epochs, batch_size, verbose = 1, checkpoint=False):
         for epoch in range(num_epochs):
+            d_total_error, g_total_error = 0.0, 0.0
+            total_pred_real, total_pred_fake = 0, 0
             for n_batch, (real_batch,_) in enumerate(data_loader):
                 N = real_batch.size(0)
 
@@ -101,3 +105,25 @@ class GanTrainer():
 
                 # Train G
                 g_error = self._train_generator(fake_data)
+
+                d_total_error += d_error
+                g_total_error += g_error
+                total_pred_real += d_pred_real.sum()
+                total_pred_fake += d_pred_fake.sum()
+
+            test_images = self.generator(self.test_noise)
+
+            d_total_error = (d_total_error * batch_size)/(2 * len(data_loader.dataset))
+            g_total_error = (g_total_error * batch_size)/(len(data_loader.dataset))
+            total_pred_fake /= (1.0 * len(data_loader.dataset))
+            total_pred_real /= (1.0 * len(data_loader.dataset)) 
+            
+            state = {
+                'epoch': epoch,
+                'd_error': d_total_error,
+                'g_error': g_total_error,
+                'd_pred_real': total_pred_real,
+                'd_pred_fake': total_pred_fake,
+                'test_images': test_images
+            }
+            self.logger.log(self, state)
