@@ -4,7 +4,7 @@
 ```
 git clone https://github.com/rikenmehta03/gan_mine.git
 cd gan_mine
-./install
+./install 
 ```
 This commands will setup a virtual environment using python3 and install the required packages in the same environment. Install script will also create an alias for activating the virtual environment: `cv_env`
 
