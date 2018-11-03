@@ -9,10 +9,10 @@ class Logger():
         time_stamp = time.strftime("%d_%m_%Y_%H:%M:%S", time.localtime())
         self.dir_name = os.path.join(os.path.dirname(DIR_PATH), 'logs', time_stamp)
         
-        if os.path.exists(self.dir_name):
+        if not os.path.exists(self.dir_name):
             os.makedirs(self.dir_name)
         
-        self.log_file = open(os.path.join(self.dir_name, 'logfile.log'), 'w+')
+        self.log_file = open(os.path.join(self.dir_name, 'logfile.log'), 'w')
         
         self.g_loss_array = []
         self.d_loss_array = []
