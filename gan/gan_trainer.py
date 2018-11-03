@@ -116,7 +116,6 @@ class GanTrainer():
                     prefix = 'Train Epoch: {}'.format(epoch),
                     suffix = 'DLoss: {:.6f} GLoss: {:.6f}'.format(d_error.item(),g_error.item()),
                     bar_length = 50)
-            break
 
         
         #--------------------------------------------------------------------------------------------
