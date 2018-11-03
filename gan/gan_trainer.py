@@ -145,18 +145,17 @@ class GanTrainer():
             'g_error': g_total_error,
             'd_pred_real': total_pred_real,
             'd_pred_fake': total_pred_fake,
-            'test_images': test_images,
             'd_state': self.discriminator.state_dict(),
             'g_state': self.generator.state_dict(),
             'd_optimizer': self.d_optimizer.state_dict(),
             'g_optimizer': self.g_optimizer.state_dict()
         }
-        return state
+        return state, test_images
         #self.logger.log(self, state)
 
     def trainer(self, data_loader, num_epochs, verbose = 1, checkpoint=False):
         for epoch in range(1, num_epochs+1):
-            state = self._train(epoch, data_loader, verbose)
-            self.logger.log(self, state)
+            state, test_images = self._train(epoch, data_loader, verbose)
+            self.logger.log(self, state, test_images)
 
 

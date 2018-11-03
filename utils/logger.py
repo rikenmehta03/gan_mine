@@ -32,22 +32,20 @@ class Logger():
     
     def _model_checkpoint(self, state):
         filename = os.path.join(self.dir_name, 'model_{}.pth'.format(state['epoch']))
-        state.pop('test_images', None)
         torch.save(state, filename)
 
-    def _log_output_images(self, state, normalize=True):
-        images = state['test_images']
+    def _log_output_images(self, state, images, normalize=True):
         _grid = vutils.make_grid(images, normalize=normalize, scale_each=True)
         image_name = os.path.join(self.dir_name, str(state['epoch']) +'_GIMG.png')
         vutils.save_image(_grid,image_name) 
 
-    def log(self, gan_object, state):
+    def log(self, gan_object, state, test_images):
         self.g_loss_array.append(state['d_error'])
         self.d_loss_array.append(state['g_error'])
         
         self._log_text(state)
-        self._log_output_images(state)
-        self._model_checkpoint(copy.deepcopy(state))
+        self._log_output_images(state, test_images)
+        self._model_checkpoint(state)
     
     def print_progress(self, iteration, total, prefix='', suffix='', decimals=1, bar_length=100):
         """
