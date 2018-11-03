@@ -11,6 +11,8 @@ class GanTrainer():
         self.device = device
         self.generator = generator
         self.discriminator = discriminator
+        self.generator.train()
+        self.discriminator.train()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.d_loss = d_loss
@@ -123,9 +125,9 @@ class GanTrainer():
         # -------------------------------------------------------------------------------------------
         
         # Generate test images after training for each epoch
-
+        self.generator.eval()
         test_images = self.generator(self.test_noise)
-
+        self.generator.train()
         # Logging details.
 
         d_total_error = (d_total_error * data_loader.batch_size)/(2 * len(data_loader.dataset))
