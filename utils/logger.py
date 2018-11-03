@@ -1,6 +1,8 @@
 import os
 import sys
 import time 
+import copy
+import torch
 import torchvision.utils as vutils
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -27,6 +29,11 @@ class Logger():
             fp.write('------------------ Epoch: {} ------------------\n'.format(state['epoch']))
             fp.write(d_g_loss)
             fp.write(d_g_acc)
+    
+    def _model_checkpoint(self, state):
+        filename = os.path.join(self.dir_name, 'model_{}.pth'.format(state['epoch']))
+        state.pop('test_images', None)
+        torch.save(state, filename)
 
     def _log_output_images(self, state, normalize=True):
         images = state['test_images']
@@ -40,6 +47,7 @@ class Logger():
         
         self._log_text(state)
         self._log_output_images(state)
+        self._model_checkpoint(copy.deepcopy(state))
     
     def print_progress(self, iteration, total, prefix='', suffix='', decimals=1, bar_length=100):
         """

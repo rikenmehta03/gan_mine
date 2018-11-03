@@ -145,7 +145,11 @@ class GanTrainer():
             'g_error': g_total_error,
             'd_pred_real': total_pred_real,
             'd_pred_fake': total_pred_fake,
-            'test_images': test_images
+            'test_images': test_images,
+            'd_state': self.discriminator.state_dict(),
+            'g_state': self.generator.state_dict(),
+            'd_optimizer': self.d_optimizer.state_dict(),
+            'g_optimizer': self.g_optimizer.state_dict()
         }
         return state
         #self.logger.log(self, state)
