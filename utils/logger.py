@@ -12,7 +12,7 @@ class Logger():
         if os.path.exists(self.dir_name):
             os.makedirs(self.dir_name)
         
-        self.log_file = open(os.path.join(self.dir_name, 'logfile.log'), 'w')
+        self.log_file = open(os.path.join(self.dir_name, 'logfile.log'), 'w+')
         
         self.g_loss_array = []
         self.d_loss_array = []
