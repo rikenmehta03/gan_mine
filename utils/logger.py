@@ -35,9 +35,8 @@ class Logger():
         torch.save(state, filename)
 
     def _log_output_images(self, state, images, normalize=True):
-        _grid = vutils.make_grid(images, normalize=normalize, scale_each=True)
         image_name = os.path.join(self.dir_name, str(state['epoch']) +'_GIMG.png')
-        vutils.save_image(_grid,image_name) 
+        vutils.save_image(images,image_name, normalize=normalize) 
 
     def log(self, gan_object, state, test_images):
         self.g_loss_array.append(state['d_error'])

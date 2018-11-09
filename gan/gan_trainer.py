@@ -157,6 +157,7 @@ class GanTrainer():
         #self.logger.log(self, state)
 
     def trainer(self, data_loader, num_epochs, verbose = 1, checkpoint=False):
+        self.test_noise = self._noise(data_loader.batch_size)
         for epoch in range(1, num_epochs+1):
             state, test_images = self._train(epoch, data_loader, verbose)
             self.logger.log(self, state, test_images)
