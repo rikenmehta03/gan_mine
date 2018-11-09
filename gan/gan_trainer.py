@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
-
+import time
 
 class GanTrainer():
     def __init__(self, discriminator, generator, d_optimizer, g_optimizer, d_loss, g_loss, logger, device = torch.device('cpu')):
@@ -84,6 +84,7 @@ class GanTrainer():
         return error
         
     def _train(self, epoch, data_loader, verbose):
+        start_time = time.time()
         d_total_error, g_total_error = 0.0, 0.0
         total_pred_real, total_pred_fake = 0, 0
         for batch_idx, (real_batch,_) in enumerate(data_loader):
@@ -134,11 +135,11 @@ class GanTrainer():
         g_total_error = (g_total_error * data_loader.batch_size)/(len(data_loader.dataset))
         total_pred_fake /= (1.0 * len(data_loader.dataset))
         total_pred_real /= (1.0 * len(data_loader.dataset))
-
+        t_del = time.time() - start_time
         if verbose > 0:
             line = '------------------ Epoch: {} ------------------\n'.format(epoch)
             line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error,g_total_error)
-            line += 'D(x): {:.4f}, D(G(z)): {:.4f}\n'.format(total_pred_real,total_pred_fake)
+            line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real,total_pred_fake, t_del)
             print(line)
         
         state = {
