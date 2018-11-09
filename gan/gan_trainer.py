@@ -1,13 +1,16 @@
+import time
+import os
+import errno
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
-import time
+
 
 class GanTrainer():
-    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, d_loss, g_loss, logger, device = torch.device('cpu')):
+    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, d_loss, g_loss, logger, test_size = None, resume = None, device = torch.device('cpu')):
         self.device = device
         self.generator = generator
         self.discriminator = discriminator
@@ -18,8 +21,26 @@ class GanTrainer():
         self.d_loss = d_loss
         self.g_loss = g_loss
         self.logger = logger
-        self.test_noise = self._noise(32) # Input: No. of noise samples
-    
+        self.start_epoch = 1
+        if test_size:
+            self.test_noise = self._noise(test_size) # Input: No. of noise samples
+        else:
+            self.test_noise = None
+        if resume is not None:
+            if os.path.exists(resume):
+                self._load_checkpoint(resume)
+            else:
+                raise OSError(errno.ENOENT, os.strerror(errno.ENOENT), resume)
+
+    def _load_checkpoint(self, resume):
+        checkpoint = torch.load(resume)
+        self.start_epoch = checkpoint['epoch'] + 1
+        self.generator.load_state_dict(checkpoint['g_state'])
+        self.discriminator.load_state_dict(checkpoint['d_state'])
+        self.g_optimizer.load_state_dict(checkpoint['g_optimizer'])
+        self.d_optimizer.load_state_dict(checkpoint['d_optimizer'])
+        print("loaded checkpoint {} (Epoch {})".format(resume, checkpoint['epoch']))
+
     def _noise(self, num_samples):
         '''
         Generates a 1-d vector of gaussian sampled random values
@@ -157,8 +178,9 @@ class GanTrainer():
         #self.logger.log(self, state)
 
     def trainer(self, data_loader, num_epochs, verbose = 1, checkpoint=False):
-        self.test_noise = self._noise(data_loader.batch_size)
-        for epoch in range(1, num_epochs+1):
+        if self.test_noise is None:
+            self.test_noise = self._noise(data_loader.batch_size)
+        for epoch in range(self.start_epoch, num_epochs+1):
             state, test_images = self._train(epoch, data_loader, verbose)
             self.logger.log(self, state, test_images)
 
