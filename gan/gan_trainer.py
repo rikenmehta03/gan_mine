@@ -29,6 +29,11 @@ class GanTrainer():
         if resume is not None:
             if os.path.exists(resume):
                 self._load_checkpoint(resume)
+                os.rmdir(self.logger.dir_name)
+                dirs = self.logger.dir_name.split('/')
+                dirs[-1] = resume.split('/')[-2]
+                self.logger.dir_name = '/' + os.path.join(*dirs)
+                self.logger.log_file_name = os.path.join(self.logger.dir_name, 'logfile.log')
             else:
                 raise OSError(errno.ENOENT, os.strerror(errno.ENOENT), resume)
 
