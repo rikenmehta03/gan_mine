@@ -38,6 +38,11 @@ class GanTrainer():
                 raise OSError(errno.ENOENT, os.strerror(errno.ENOENT), resume)
 
     def _load_checkpoint(self, resume):
+        '''
+        Loads a given checkpoint. Throws an error if the path doesn't exist.
+
+        Input: File path
+        '''
         checkpoint = torch.load(resume)
         self.start_epoch = checkpoint['epoch'] + 1
         self.generator.load_state_dict(checkpoint['g_state'])
@@ -180,7 +185,6 @@ class GanTrainer():
             'g_optimizer': self.g_optimizer.state_dict()
         }
         return state, test_images
-        #self.logger.log(self, state)
 
     def trainer(self, data_loader, num_epochs, verbose = 1, checkpoint=False):
         if self.test_noise is None:
