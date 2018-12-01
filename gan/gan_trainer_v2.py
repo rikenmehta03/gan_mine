@@ -142,7 +142,6 @@ class GanTrainer():
         test_images = self.generator(self.test_noise)
         self.generator.train()
         # Logging details.
-
         d_total_error = (d_total_error * data_loader.batch_size)/(2 * len(data_loader.dataset))
         g_total_error = (g_total_error * data_loader.batch_size)/(len(data_loader.dataset))
         total_pred_fake /= (1.0 * len(data_loader.dataset))
