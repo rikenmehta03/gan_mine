@@ -9,23 +9,31 @@ from torchvision.models.inception import inception_v3
 import numpy as np
 from scipy.stats import entropy
 
-def inception_score(dataloader, device=torch.device("cpu"), resize=False, splits=1):
+def inception_score(dataloader, cuda=True, resize=False, splits=1):
     """Computes the inception score of the generated images imgs
-    dataloader -- Dataloader from where the images to be loaded
-    device -- whether or not to run on GPU
+    imgs -- Torch dataset of (3xHxW) numpy images normalized in the range [-1, 1]
+    cuda -- whether or not to run on GPU
+    batch_size -- batch size for feeding into Inception v3
     splits -- number of splits
     """
     N = len(dataloader.dataset)
-
     batch_size = dataloader.batch_size
-    
+
     assert batch_size > 0
     assert N > batch_size
 
+    # Set up dtype
+    if cuda:
+        dtype = torch.cuda.FloatTensor
+    else:
+        if torch.cuda.is_available():
+            print("WARNING: You have a CUDA device, so you should probably set cuda=True")
+        dtype = torch.FloatTensor
+
     # Load inception model
-    inception_model = inception_v3(pretrained=True, transform_input=False).to(device)
+    inception_model = inception_v3(pretrained=True, transform_input=False).type(dtype)
     inception_model.eval();
-    up = nn.Upsample(size=(299, 299), mode='bilinear').to(device)
+    up = nn.Upsample(size=(299, 299), mode='bilinear').type(dtype)
     def get_pred(x):
         if resize:
             x = up(x)
@@ -36,7 +44,7 @@ def inception_score(dataloader, device=torch.device("cpu"), resize=False, splits
     preds = np.zeros((N, 1000))
 
     for i, batch in enumerate(dataloader, 0):
-        batch = batch.to(device)
+        batch = batch.type(dtype)
         batchv = Variable(batch)
         batch_size_i = batch.size()[0]
 
