@@ -22,7 +22,7 @@ class GanTrainer():
         self.g_loss = g_loss
         self.logger = logger
         self.start_epoch = 1
-        self.iter = 0
+        self.iter = 1
         if test_size:
             self.test_noise = self._noise(test_size) # Input: No. of noise samples
         else:
@@ -163,7 +163,7 @@ class GanTrainer():
                 line = '------------------ Iter: {} ------------------\n'.format(self.iter)
                 line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error/200.0,g_total_error/100.0)
                 line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real/(100.0 * data_loader.batch_size),total_pred_fake/(100.0 * data_loader.batch_size), t_del)
-                self.logger.log(self, self.iter, line, test_images)
+                self.logger.log_iter(self, self.iter, line, test_images)
                 d_total_error, g_total_error = 0.0, 0.0
                 total_pred_real, total_pred_fake = 0, 0
             
