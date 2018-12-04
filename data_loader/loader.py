@@ -77,12 +77,11 @@ class Data_Loader():
 
         dataset = getattr(self, 'load_' + self.dataset)()
         print('dataset',len(dataset))
-        loader = torch.utils.data.DataLoader(dataset=dataset,
+        dataloader = torch.utils.data.DataLoader(dataset=dataset,
                                               batch_size=self.batch,
                                               shuffle=self.shuffle,
-                                              num_workers=4,
-                                              drop_last=True)
-        return loader
+                                              num_workers=4)
+        return dataloader
     
     @classmethod
     def from_dict(cls, params):
