@@ -22,13 +22,9 @@ class Logger():
         self.g_loss_array = []
         self.d_loss_array = []
 
-    def _log_text(self, state):
-        d_g_loss = 'Discriminator Loss: {:.4f}, Generator Loss: {:.4f}\n'.format(state['d_error'], state['g_error'])
-        d_g_acc = 'D(x): {:.4f}, D(G(z)): {:.4f}\n'.format(state['d_pred_real'], state['d_pred_fake'])
+    def _log_text(self, text):
         with open(self.log_file_name, 'a') as fp:
-            fp.write('------------------ Epoch: {} ------------------\n'.format(state['epoch']))
-            fp.write(d_g_loss)
-            fp.write(d_g_acc)
+            fp.write(text)
     
     def _model_checkpoint(self, state):
         filename = os.path.join(self.dir_name, 'model_{}.pth'.format(state['epoch']))
