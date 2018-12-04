@@ -149,7 +149,7 @@ class GanTrainer():
             if verbose > 0:
                 self.logger.print_progress(batch_idx + 1,
                     len(data_loader),
-                    prefix = 'Train Epoch: {}'.format(epoch),
+                    prefix = 'Train Epoch: {} Iter: {}'.format(epoch, self.iter),
                     suffix = 'DLoss: {:.6f} GLoss: {:.6f}'.format(d_error.item(),g_error.item()),
                     bar_length = 50)
             
