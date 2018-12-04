@@ -22,6 +22,7 @@ class GanTrainer():
         self.g_loss = g_loss
         self.logger = logger
         self.start_epoch = 1
+        self.iter = 0
         if test_size:
             self.test_noise = self._noise(test_size) # Input: No. of noise samples
         else:
@@ -45,6 +46,7 @@ class GanTrainer():
         '''
         checkpoint = torch.load(resume)
         self.start_epoch = checkpoint['epoch'] + 1
+        self.iter = checkpoint['iter']
         self.generator.load_state_dict(checkpoint['g_state'])
         self.discriminator.load_state_dict(checkpoint['d_state'])
         self.g_optimizer.load_state_dict(checkpoint['g_optimizer'])
@@ -150,31 +152,46 @@ class GanTrainer():
                     prefix = 'Train Epoch: {}'.format(epoch),
                     suffix = 'DLoss: {:.6f} GLoss: {:.6f}'.format(d_error.item(),g_error.item()),
                     bar_length = 50)
+            
+            if verbose > 0 and self.iter % 100 == 0:
+                # Generate test images after training for each epoch
+                self.generator.eval()
+                test_images = self.generator(self.test_noise)
+                self.generator.train()
+                # Logging details.
+                t_del = time.time() - start_time
+                line = '------------------ Iter: {} ------------------\n'.format(self.iter)
+                line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error/200.0,g_total_error/100.0)
+                line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real/(100.0 * data_loader.batch_size),total_pred_fake/(100.0 * data_loader.batch_size), t_del)
+                self.logger.log(self, self.iter, line, test_images)
+                d_total_error, g_total_error = 0.0, 0.0
+                total_pred_real, total_pred_fake = 0, 0
 
         
         #--------------------------------------------------------------------------------------------
         # Training Ends.
         # -------------------------------------------------------------------------------------------
         
-        # Generate test images after training for each epoch
-        self.generator.eval()
-        test_images = self.generator(self.test_noise)
-        self.generator.train()
-        # Logging details.
+        # # Generate test images after training for each epoch
+        # self.generator.eval()
+        # test_images = self.generator(self.test_noise)
+        # self.generator.train()
+        # # Logging details.
 
-        d_total_error = (d_total_error * data_loader.batch_size)/(2 * len(data_loader.dataset))
-        g_total_error = (g_total_error * data_loader.batch_size)/(len(data_loader.dataset))
-        total_pred_fake /= (1.0 * len(data_loader.dataset))
-        total_pred_real /= (1.0 * len(data_loader.dataset))
-        t_del = time.time() - start_time
-        if verbose > 0:
-            line = '------------------ Epoch: {} ------------------\n'.format(epoch)
-            line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error,g_total_error)
-            line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real,total_pred_fake, t_del)
-            print(line)
+        # d_total_error = (d_total_error * data_loader.batch_size)/(2 * len(data_loader.dataset))
+        # g_total_error = (g_total_error * data_loader.batch_size)/(len(data_loader.dataset))
+        # total_pred_fake /= (1.0 * len(data_loader.dataset))
+        # total_pred_real /= (1.0 * len(data_loader.dataset))
+        # t_del = time.time() - start_time
+        # if verbose > 0:
+        #     line = '------------------ Epoch: {} ------------------\n'.format(epoch)
+        #     line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error,g_total_error)
+        #     line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real,total_pred_fake, t_del)
+        #     print(line)
         
         state = {
             'epoch': epoch,
+            'iter': self.iter,
             'd_error': d_total_error,
             'g_error': g_total_error,
             'd_pred_real': total_pred_real,
@@ -184,13 +201,13 @@ class GanTrainer():
             'd_optimizer': self.d_optimizer.state_dict(),
             'g_optimizer': self.g_optimizer.state_dict()
         }
-        return state, test_images
+        return state
 
     def trainer(self, data_loader, num_epochs, verbose = 1, checkpoint=False):
         if self.test_noise is None:
             self.test_noise = self._noise(data_loader.batch_size)
         for epoch in range(self.start_epoch, num_epochs+1):
-            state, test_images = self._train(epoch, data_loader, verbose)
-            self.logger.log(self, state, test_images)
+            state = self._train(epoch, data_loader, verbose)
+            self.logger.log_epoch(self, state)
 
 
