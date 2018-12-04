@@ -166,6 +166,8 @@ class GanTrainer():
                 self.logger.log(self, self.iter, line, test_images)
                 d_total_error, g_total_error = 0.0, 0.0
                 total_pred_real, total_pred_fake = 0, 0
+            
+            self.iter += 1
 
         
         #--------------------------------------------------------------------------------------------
