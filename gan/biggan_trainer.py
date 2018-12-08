@@ -146,15 +146,12 @@ class BigGanTrainer():
                 d_pred_real += _d_pred_real.sum()
                 d_pred_fake += _d_pred_fake.sum()
                 
-            d_total_error += d_error
-            total_pred_real += d_pred_real
-            total_pred_fake += d_pred_fake
-
-            
             # Train G
             g_error = self._train_generator().item()
 
             d_total_error += d_error
+            total_pred_real += d_pred_real
+            total_pred_fake += d_pred_fake
             g_total_error += g_error
             
 
@@ -173,7 +170,7 @@ class BigGanTrainer():
                 # Logging details.
                 t_del = time.time() - start_time
                 line = '------------------ Iter: {} ------------------\n'.format(self.iter)
-                line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error/200.0,g_total_error/100.0)
+                line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error/(self.d_step*200.0),g_total_error/100.0)
                 line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real/(self.d_step * 100.0 * self.batch_size),total_pred_fake/(self.d_step * 100.0 * self.batch_size), t_del)
                 self.logger.log_iter(self, self.iter, line, test_images)
                 d_total_error, g_total_error = 0.0, 0.0
