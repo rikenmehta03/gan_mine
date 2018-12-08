@@ -10,7 +10,7 @@ from torch.autograd import Variable
 
 
 class BigGanTrainer():
-    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, logger, d_step = 1, test_size = None, resume = None, device = torch.device('cpu')):
+    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, logger, log_iter=1000, d_step = 1, test_size = None, resume = None, device = torch.device('cpu')):
         self.device = device
         self.generator = generator
         self.discriminator = discriminator
@@ -19,6 +19,7 @@ class BigGanTrainer():
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.logger = logger
+        self.log_iter = log_iter
         self.iter = 1
         self.num_classes = self.generator.num_classes
         self.d_step = d_step
@@ -178,7 +179,7 @@ class BigGanTrainer():
                 d_total_error, g_total_error = 0.0, 0.0
                 total_pred_real, total_pred_fake = 0, 0
             
-            if self.iter % 1000 == 0:
+            if self.iter % self.log_iter == 0:
                 state = {
                     'iter': self.iter,
                     'd_error': d_total_error,
