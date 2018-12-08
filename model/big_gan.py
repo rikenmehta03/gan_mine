@@ -13,7 +13,7 @@ def get_biggan(num_class, gpus = []):
 
         if len(gpus) > 1:
             generator = nn.DataParallel(generator, device_ids=gpus)
-            discriminator = nn.DataParallel(discriminator, device_ids=gpus)
+            discriminator = DataParallelWithCallback(discriminator, device_ids=gpus)
     else:
         generator = Generator(num_class=num_class)
         discriminator = Discriminator(num_class=num_class)
