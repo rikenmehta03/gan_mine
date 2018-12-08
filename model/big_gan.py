@@ -27,9 +27,9 @@ class Generator(nn.Module):
         self.noise_size = noise_size
         self.num_classes = num_class
         self.ch = ch
-        self.num_blocks = 5
+        self.num_blocks = 6
         self.linear = nn.Linear(num_class, 128, bias=False)
-        self.dense = nn.utils.spectral_norm(nn.Linear(self.noise_size/self.num_blocks, 4 * 4 * 16 * ch))
+        self.dense = nn.utils.spectral_norm(nn.Linear(int(self.noise_size/self.num_blocks), 4 * 4 * 16 * ch))
 
         self.blocks = nn.ModuleList([
             ResBlockGen(16 * ch, 16 * ch, num_class),
@@ -43,7 +43,7 @@ class Generator(nn.Module):
         self.last = nn.utils.spectral_norm(nn.Conv2d(1*ch, 3, 3, padding=1))
     
     def forward(self, input, class_id):
-        codes = torch.split(input, self.noise_size/self.num_blocks, 1)
+        codes = torch.split(input, int(self.noise_size/self.num_blocks), 1)
         embeddings = self.linear(class_id)
 
         out = self.dense(codes[0])

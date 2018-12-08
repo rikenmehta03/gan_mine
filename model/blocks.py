@@ -109,9 +109,13 @@ class ResBlockGen(nn.Module):
 
         self.activation = nn.ReLU(True)
         self.upsample = nn.Upsample(scale_factor=2)
+        self.bypass = nn.Sequential(
+            self.upsample,
+            nn.utils.spectral_norm(nn.Conv2d(in_channels, out_channels ,1, 1, 0))
+        )
 
     def forward(self, input, class_id=None):
-        bypass = self.upsample(input)
+        bypass = self.bypass(input)
         if class_id is None:
             out = self.bn0(input)
         else:

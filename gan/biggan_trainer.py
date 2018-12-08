@@ -1,5 +1,6 @@
-import time
 import os
+import time
+import datetime
 import errno
 import torch
 import torch.nn as nn
@@ -10,7 +11,7 @@ from torch.autograd import Variable
 
 
 class BigGanTrainer():
-    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, logger, log_iter=1000, d_step = 1, test_size = None, resume = None, device = torch.device('cpu')):
+    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, num_classes, logger, log_iter=1000, d_step = 1, test_size = None, resume = None, device = torch.device('cpu')):
         self.device = device
         self.generator = generator
         self.discriminator = discriminator
@@ -21,7 +22,7 @@ class BigGanTrainer():
         self.logger = logger
         self.log_iter = log_iter
         self.iter = 1
-        self.num_classes = self.generator.num_classes
+        self.num_classes = num_classes
         self.d_step = d_step
         if test_size:
             self.test_noise = self._noise(test_size) # Input: No. of noise samples
@@ -56,7 +57,7 @@ class BigGanTrainer():
         '''
         Generates a 1-d vector of gaussian sampled random values
         '''
-        n = torch.randn(num_samples, self.generator.noise_size, device = self.device) 
+        n = torch.randn(num_samples, 120, device = self.device) 
         return n
     
     def _ones_target(self, size):
@@ -156,16 +157,19 @@ class BigGanTrainer():
             
 
             if verbose > 0:
+                elapsed = time.time() - start_time
+                elapsed = str(datetime.timedelta(seconds=elapsed))
                 self.logger.print_progress((batch_idx*self.d_step) % len(data_loader),
                     len(data_loader),
                     prefix = 'Train Iter: {}/{}'.format(self.iter, num_iter),
-                    suffix = 'DLoss: {:.6f} GLoss: {:.6f}'.format(d_error/self.d_step,g_error.item()),
+                    suffix = 'DLoss: {:.6f} GLoss: {:.6f} Elapsed: {:.6f}'.format(d_error/self.d_step,g_error                  ),
                     bar_length = 50)
             
             if verbose > 0 and self.iter % 100 == 0:
                 # Generate test images after training for each epoch
                 self.generator.eval()
-                test_images = self.generator(self.test_noise)
+                _, z_class_one_hot = self._label_sampel()
+                test_images = self.generator(self.test_noise, z_class_one_hot)
                 self.generator.train()
                 # Logging details.
                 t_del = time.time() - start_time
