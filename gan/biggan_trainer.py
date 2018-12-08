@@ -70,9 +70,6 @@ class BigGanTrainer():
     def _train_discriminator(self, real_data, real_labels):
         N = real_data.size(0)
         
-        # Reset gradients
-        self.d_optimizer.zero_grad()
-        
         # 1.1 Train on Real Data
         prediction_real = self.discriminator(real_data, real_labels)
         error_real = torch.nn.ReLU()(1.0 - prediction_real).mean()
@@ -87,6 +84,7 @@ class BigGanTrainer():
         
         # 1.3 Update weights with gradients
         error = error_fake + error_real
+        self.d_optimizer.zero_grad()
         error.backward()
         self.d_optimizer.step()
         

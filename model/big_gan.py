@@ -28,7 +28,7 @@ class Generator(nn.Module):
         self.num_classes = num_class
         self.ch = ch
         self.num_blocks = 6
-        self.linear = nn.Linear(num_class, 128, bias=False)
+        self.linear = nn.utils.spectral_norm(nn.Linear(num_class, 128, bias=False))
         self.dense = nn.utils.spectral_norm(nn.Linear(int(self.noise_size/self.num_blocks), 4 * 4 * 16 * ch))
 
         self.blocks = nn.ModuleList([
@@ -90,6 +90,8 @@ class Discriminator(nn.Module):
         )
 
         self.embedding = nn.Embedding(num_class, 16*ch)
+        self.embedding.weight.data.uniform_(-0.1, 0.1)
+        self.embedding = nn.utils.spectral_norm(self.embedding)
         self.linear = nn.utils.spectral_norm(nn.Linear(16*ch, 1))
     
     def forward(self, input, class_id):
