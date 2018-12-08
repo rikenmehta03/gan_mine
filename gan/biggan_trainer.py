@@ -165,12 +165,12 @@ class BigGanTrainer():
                     suffix = 'DLoss: {:.6f} GLoss: {:.6f} Elapsed: {}'.format(d_error/self.d_step,g_error,elapsed),
                     bar_length = 50)
             
-            if verbose > 0 and self.iter % 100 == 0:
+            if verbose > 0 and self.iter % 1 == 0:
                 # Generate test images after training for each epoch
-                self.generator.eval()
+                # self.generator.eval()
                 _, z_class_one_hot = self._label_sampel()
                 test_images = self.generator(self.test_noise, z_class_one_hot)
-                self.generator.train()
+                # self.generator.train()
                 # Logging details.
                 t_del = time.time() - start_time
                 line = '------------------ Iter: {} ------------------\n'.format(self.iter)
