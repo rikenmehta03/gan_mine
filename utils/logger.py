@@ -27,7 +27,10 @@ class Logger():
             fp.write(text)
     
     def _model_checkpoint(self, state):
-        filename = os.path.join(self.dir_name, 'model_{}.pth'.format(state['epoch']))
+        _iter = state.get('epoch', None)
+        if _iter is None:
+            _iter = state.get('iter', None)
+        filename = os.path.join(self.dir_name, 'model_{}.pth'.format(_iter))
         torch.save(state, filename)
 
     def _log_output_images(self, _iter, images, normalize=True):
