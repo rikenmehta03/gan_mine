@@ -111,6 +111,10 @@ class BigGanTrainer():
 
         # Return error
         return error
+    
+    def reset_grad(self):
+        self.d_optimizer.zero_grad()
+        self.g_optimizer.zero_grad()
         
     def _train(self, num_iter, verbose):
         data_iter = iter(self.data_loader)
@@ -186,13 +190,98 @@ class BigGanTrainer():
                 self.logger.log_epoch(self, state)
             
             self.iter += 1
+    
+    def _train_new(self, num_iter, verbose):
+        data_iter = iter(self.data_loader)
+        start_time = time.time()
+        start_iter = self.iter
+        for batch_idx in range(start_iter, num_iter):
+            self.generator.train()
+            self.discriminator.train()
+            # Train D
+                
+            try:
+                real_batch, real_labels = next(data_iter)
+            except:
+                data_iter = iter(self.data_loader)
+                real_batch, real_labels = next(data_iter)
+
+            real_data = real_batch.to(self.device)
+            real_labels = real_labels.to(self.device)
+            d_out_real = self.discriminator(real_data, real_labels)
+            d_loss_real = torch.nn.ReLU()(1.0 - d_out_real).mean()
+            
+            # apply Gumbel Softmax
+            z = torch.randn(self.batch_size, 120).to(self.device)
+
+            z_class, z_class_one_hot = self._label_sampel()
+ 
+            fake_images = self.generator(z, z_class_one_hot)
+            d_out_fake = self.discriminator(fake_images, z_class)
+            d_loss_fake = torch.nn.ReLU()(1.0 + d_out_fake).mean()
+
+            d_loss = d_loss_real + d_loss_fake
+            self.reset_grad()
+            d_loss.backward()
+            self.d_optimizer.step()
+
+            # ================== Train G and gumbel ================== #
+            # Create random noise
+            z = torch.randn(self.batch_size, 120).to(self.device)
+            z_class, z_class_one_hot = self._label_sampel()
+            
+            fake_images = self.generator(z, z_class_one_hot)
+
+            # Compute loss with fake images
+            g_out_fake = self.discriminator(fake_images, z_class)  # batch x n
+            g_loss_fake = - g_out_fake.mean()
+
+            self.reset_grad()
+            g_loss_fake.backward()
+            self.g_optimizer.step()
+
+            
+
+            if verbose > 0:
+                elapsed = time.time() - start_time
+                elapsed = str(datetime.timedelta(seconds=elapsed))
+                self.logger.print_progress((batch_idx*self.d_step) % len(self.data_loader),
+                    len(self.data_loader),
+                    prefix = 'Train Iter: {}/{}'.format(self.iter, num_iter),
+                    suffix = 'DLoss: {:.6f} GLoss: {:.6f} Elapsed: {}'.format(d_loss.item(),g_loss_fake.item(),elapsed),
+                    bar_length = 50)
+            
+            if verbose > 0 and self.iter % 100 == 0:
+                # Generate test images after training for log_iter
+                _, z_class_one_hot = self._label_sampel()
+                test_images = self.generator(self.test_noise, z_class_one_hot).detach()
+
+                # Logging details.
+                t_del = time.time() - start_time
+                # line = '------------------ Iter: {} ------------------\n'.format(self.iter)
+                # line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error/(self.d_step*200.0),g_total_error/100.0)
+                # line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real/(self.d_step * 100.0 * self.batch_size),total_pred_fake/(self.d_step * 100.0 * self.batch_size), t_del)
+                line = 'Item: {}, Time: {:.8f}\n'.format(self.iter, t_del)
+                self.logger.log_iter(self, self.iter, line, self._denorm(test_images))
+
+            if self.iter % self.log_iter == 0:
+                state = {
+                    'iter': self.iter,
+                    'd_state': self.discriminator.state_dict(),
+                    'g_state': self.generator.state_dict(),
+                    'd_optimizer': self.d_optimizer.state_dict(),
+                    'g_optimizer': self.g_optimizer.state_dict()
+                }
+                self.logger.log_epoch(self, state)
+            
+            self.iter += 1
 
     def trainer(self, data_loader, num_iter, verbose = 1, checkpoint=False):
         if self.test_noise is None:
             self.test_noise = self._noise(data_loader.batch_size)
         self.batch_size = data_loader.batch_size
         self.data_loader = data_loader
-        self._train(num_iter, verbose)
+        self._train_new(num_iter, verbose)
         
 
 
