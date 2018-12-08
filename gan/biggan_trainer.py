@@ -15,8 +15,6 @@ class BigGanTrainer():
         self.device = device
         self.generator = generator
         self.discriminator = discriminator
-        self.generator.train()
-        self.discriminator.train()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.logger = logger
@@ -60,19 +58,9 @@ class BigGanTrainer():
         n = torch.randn(num_samples, 120, device = self.device) 
         return n
     
-    def _ones_target(self, size):
-        '''
-        Tensor containing ones, with shape = size
-        '''
-        data = torch.ones(size, 1, device = self.device)
-        return data
-
-    def _zeros_target(self, size):
-        '''
-        Tensor containing zeros, with shape = size
-        '''
-        data = torch.zeros(size, 1, device = self.device)
-        return data
+    def _denorm(self, x):
+        out = (x + 1) / 2
+        return out.clamp_(0, 1)
     
     def _label_sampel(self):
         label = torch.LongTensor(self.batch_size, 1).random_()%self.num_classes
@@ -134,7 +122,8 @@ class BigGanTrainer():
         total_pred_real, total_pred_fake = 0, 0
         start_iter = self.iter
         for batch_idx in range(start_iter, num_iter):
-            
+            self.generator.train()
+            self.discriminator.train()
             # Train D
             d_error, d_pred_real, d_pred_fake  = 0, 0, 0 
             for _ in range(self.d_step):
@@ -165,18 +154,17 @@ class BigGanTrainer():
                     suffix = 'DLoss: {:.6f} GLoss: {:.6f} Elapsed: {}'.format(d_error/self.d_step,g_error,elapsed),
                     bar_length = 50)
             
-            if verbose > 0 and self.iter % 1 == 0:
-                # Generate test images after training for each epoch
-                # self.generator.eval()
+            if verbose > 0 and self.iter % self.log_iter == 0:
+                # Generate test images after training for log_iter
                 _, z_class_one_hot = self._label_sampel()
-                test_images = self.generator(self.test_noise, z_class_one_hot)
-                # self.generator.train()
+                test_images = self.generator(self.test_noise, z_class_one_hot).detach()
+
                 # Logging details.
                 t_del = time.time() - start_time
                 line = '------------------ Iter: {} ------------------\n'.format(self.iter)
                 line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error/(self.d_step*200.0),g_total_error/100.0)
                 line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real/(self.d_step * 100.0 * self.batch_size),total_pred_fake/(self.d_step * 100.0 * self.batch_size), t_del)
-                self.logger.log_iter(self, self.iter, line, test_images)
+                self.logger.log_iter(self, self.iter, line, self._denorm(test_images))
                 d_total_error, g_total_error = 0.0, 0.0
                 total_pred_real, total_pred_fake = 0, 0
             
