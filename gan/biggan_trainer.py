@@ -9,8 +9,8 @@ from torchvision import datasets, transforms
 from torch.autograd import Variable
 
 
-class GanTrainer():
-    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, d_loss, g_loss, logger, test_size = None, resume = None, device = torch.device('cpu')):
+class BigGanTrainer():
+    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, logger, log_iter=1000, d_step = 1, test_size = None, resume = None, device = torch.device('cpu')):
         self.device = device
         self.generator = generator
         self.discriminator = discriminator
@@ -18,11 +18,11 @@ class GanTrainer():
         self.discriminator.train()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
-        self.d_loss = d_loss
-        self.g_loss = g_loss
         self.logger = logger
-        self.start_epoch = 1
+        self.log_iter = log_iter
         self.iter = 1
+        self.num_classes = self.generator.num_classes
+        self.d_step = d_step
         if test_size:
             self.test_noise = self._noise(test_size) # Input: No. of noise samples
         else:
@@ -45,7 +45,6 @@ class GanTrainer():
         Input: File path
         '''
         checkpoint = torch.load(resume)
-        self.start_epoch = checkpoint['epoch'] + 1
         self.iter = checkpoint['iter']
         self.generator.load_state_dict(checkpoint['g_state'])
         self.discriminator.load_state_dict(checkpoint['d_state'])
@@ -57,7 +56,7 @@ class GanTrainer():
         '''
         Generates a 1-d vector of gaussian sampled random values
         '''
-        n = torch.randn(num_samples, self.generator.in_ch, 1, 1, device = self.device) 
+        n = torch.randn(num_samples, self.generator.noise_size, device = self.device) 
         return n
     
     def _ones_target(self, size):
@@ -74,21 +73,31 @@ class GanTrainer():
         data = torch.zeros(size, 1, device = self.device)
         return data
     
-    def _train_discriminator(self, real_data, fake_data):
+    def _label_sampel(self):
+        label = torch.LongTensor(self.batch_size, 1).random_()%self.num_classes
+        one_hot= torch.zeros(self.batch_size, self.num_classes).scatter_(1, label, 1)
+        return label.squeeze(1).to(self.device), one_hot.to(self.device) 
+    
+    def _train_discriminator(self, real_data, real_labels):
         N = real_data.size(0)
+        
         # Reset gradients
         self.d_optimizer.zero_grad()
         
         # 1.1 Train on Real Data
-        prediction_real = self.discriminator(real_data)
+        prediction_real = self.discriminator(real_data, real_labels)
         # Calculate error and backpropagate
-        error_real = self.d_loss(prediction_real, self._ones_target(N))
+        error_real = torch.nn.ReLU()(1.0 - prediction_real).mean()
         error_real.backward()
 
         # 1.2 Train on Fake Data
-        prediction_fake = self.discriminator(fake_data)
+        
+        z_class, z_class_one_hot = self._label_sampel()
+        fake_data = self.generator(self._noise(N), z_class_one_hot).detach().to(self.device)
+        
+        prediction_fake = self.discriminator(fake_data, z_class)
         # Calculate error and backpropagate
-        error_fake = self.d_loss(prediction_fake, self._zeros_target(N))
+        error_fake = torch.nn.ReLU()(1.0 + prediction_fake).mean()
         error_fake.backward()
         
         # 1.3 Update weights with gradients
@@ -97,17 +106,19 @@ class GanTrainer():
         # Return error and predictions for real and fake inputs
         return error_real + error_fake, prediction_real, prediction_fake
     
-    def _train_generator(self, fake_data):
-        N = fake_data.size(0)
+    def _train_generator(self):
+        N = self.batch_size
+        z_class, z_class_one_hot = self._label_sampel()
+        fake_data = self.generator(self._noise(N), z_class_one_hot).detach().to(self.device)
 
         # Reset gradients
         self.g_optimizer.zero_grad()
 
         # Sample noise and generate fake data
-        prediction = self.discriminator(fake_data)
+        prediction = self.discriminator(fake_data, z_class)
 
         # Calculate error and backpropagate
-        error = self.g_loss(prediction, self._ones_target(N))
+        error = - prediction.mean()
         error.backward()
 
         # Update weights with gradients
@@ -116,41 +127,39 @@ class GanTrainer():
         # Return error
         return error
         
-    def _train(self, epoch, data_loader, verbose):
+    def _train(self, num_iter, data_loader, verbose):
         start_time = time.time()
         d_total_error, g_total_error = 0.0, 0.0
         total_pred_real, total_pred_fake = 0, 0
-        for batch_idx, (real_batch,_) in enumerate(data_loader):
-            N = real_batch.size(0)
-
-            # 1. Train Discriminator
-            real_data = real_batch.to(self.device)
-
-            # Generate fake data and detach 
-            # (so gradients are not calculated for generator)
-            fake_data = self.generator(self._noise(N)).detach().to(self.device)
-
+        start_iter = self.iter
+        for batch_idx in range(start_iter, num_iter):
+            
             # Train D
-            d_error, d_pred_real, d_pred_fake =  self._train_discriminator(real_data, fake_data)
+            d_error, d_pred_real, d_pred_fake  = 0, 0, 0 
+            for _ in range(self.d_step):
+                real_batch, real_labels = next(data_loader)
+                real_data = real_batch.to(self.device)
+                real_labels = real_labels.to(self.device)
 
-            # 2. Train Generator
-
-            # Generate fake data
-            fake_data = self.generator(self._noise(N)).to(self.device)
-
+                _d_error, _d_pred_real, _d_pred_fake =  self._train_discriminator(real_data, real_labels)
+                d_error += _d_error.item()
+                d_pred_real += _d_pred_real.sum()
+                d_pred_fake += _d_pred_fake.sum()
+                
             # Train G
-            g_error = self._train_generator(fake_data)
+            g_error = self._train_generator().item()
 
             d_total_error += d_error
+            total_pred_real += d_pred_real
+            total_pred_fake += d_pred_fake
             g_total_error += g_error
-            total_pred_real += d_pred_real.sum()
-            total_pred_fake += d_pred_fake.sum()
+            
 
             if verbose > 0:
-                self.logger.print_progress(batch_idx + 1,
+                self.logger.print_progress((batch_idx*self.d_step) % len(data_loader),
                     len(data_loader),
-                    prefix = 'Train Epoch: {} Iter: {}'.format(epoch, self.iter),
-                    suffix = 'DLoss: {:.6f} GLoss: {:.6f}'.format(d_error.item(),g_error.item()),
+                    prefix = 'Train Iter: {}/{}'.format(self.iter, num_iter),
+                    suffix = 'DLoss: {:.6f} GLoss: {:.6f}'.format(d_error/self.d_step,g_error.item()),
                     bar_length = 50)
             
             if verbose > 0 and self.iter % 100 == 0:
@@ -161,53 +170,33 @@ class GanTrainer():
                 # Logging details.
                 t_del = time.time() - start_time
                 line = '------------------ Iter: {} ------------------\n'.format(self.iter)
-                line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error/200.0,g_total_error/100.0)
-                line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real/(100.0 * data_loader.batch_size),total_pred_fake/(100.0 * data_loader.batch_size), t_del)
+                line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error/(self.d_step*200.0),g_total_error/100.0)
+                line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real/(self.d_step * 100.0 * self.batch_size),total_pred_fake/(self.d_step * 100.0 * self.batch_size), t_del)
                 self.logger.log_iter(self, self.iter, line, test_images)
                 d_total_error, g_total_error = 0.0, 0.0
                 total_pred_real, total_pred_fake = 0, 0
             
+            if self.iter % self.log_iter == 0:
+                state = {
+                    'iter': self.iter,
+                    'd_error': d_total_error,
+                    'g_error': g_total_error,
+                    'd_pred_real': total_pred_real,
+                    'd_pred_fake': total_pred_fake,
+                    'd_state': self.discriminator.state_dict(),
+                    'g_state': self.generator.state_dict(),
+                    'd_optimizer': self.d_optimizer.state_dict(),
+                    'g_optimizer': self.g_optimizer.state_dict()
+                }
+                self.logger.log_epoch(self, state)
+            
             self.iter += 1
 
-        
-        #--------------------------------------------------------------------------------------------
-        # Training Ends.
-        # -------------------------------------------------------------------------------------------
-        
-        # # Generate test images after training for each epoch
-        # self.generator.eval()
-        # test_images = self.generator(self.test_noise)
-        # self.generator.train()
-        # # Logging details.
-
-        # d_total_error = (d_total_error * data_loader.batch_size)/(2 * len(data_loader.dataset))
-        # g_total_error = (g_total_error * data_loader.batch_size)/(len(data_loader.dataset))
-        # total_pred_fake /= (1.0 * len(data_loader.dataset))
-        # total_pred_real /= (1.0 * len(data_loader.dataset))
-        # t_del = time.time() - start_time
-        # if verbose > 0:
-        #     line = '------------------ Epoch: {} ------------------\n'.format(epoch)
-        #     line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error,g_total_error)
-        #     line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real,total_pred_fake, t_del)
-        #     print(line)
-        
-        state = {
-            'epoch': epoch,
-            'iter': self.iter,
-            'd_error': d_total_error,
-            'g_error': g_total_error,
-            'd_pred_real': total_pred_real,
-            'd_pred_fake': total_pred_fake,
-            'd_state': self.discriminator.state_dict(),
-            'g_state': self.generator.state_dict(),
-            'd_optimizer': self.d_optimizer.state_dict(),
-            'g_optimizer': self.g_optimizer.state_dict()
-        }
-        return state
-
-    def trainer(self, data_loader, num_epochs, verbose = 1, checkpoint=False):
+    def trainer(self, data_loader, num_iter, verbose = 1, checkpoint=False):
         if self.test_noise is None:
             self.test_noise = self._noise(data_loader.batch_size)
-        for epoch in range(self.start_epoch, num_epochs+1):
-            state = self._train(epoch, data_loader, verbose)
-            self.logger.log_epoch(self, state)
+        self.batch_size = data_loader.batch_size
+        self._train(num_iter, iter(data_loader), verbose)
+        
+
+
