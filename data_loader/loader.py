@@ -80,7 +80,8 @@ class Data_Loader():
         dataloader = torch.utils.data.DataLoader(dataset=dataset,
                                               batch_size=self.batch,
                                               shuffle=self.shuffle,
-                                              num_workers=4)
+                                              num_workers=4,
+                                              drop_last=True)
         return dataloader
     
     @classmethod
