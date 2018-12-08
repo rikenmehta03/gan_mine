@@ -153,8 +153,8 @@ class BigGanTrainer():
             if verbose > 0:
                 elapsed = time.time() - start_time
                 elapsed = str(datetime.timedelta(seconds=elapsed))
-                self.logger.print_progress((batch_idx*self.d_step) % len(data_loader),
-                    len(data_loader),
+                self.logger.print_progress((batch_idx*self.d_step) % len(self.data_loader),
+                    len(self.data_loader),
                     prefix = 'Train Iter: {}/{}'.format(self.iter, num_iter),
                     suffix = 'DLoss: {:.6f} GLoss: {:.6f} Elapsed: {}'.format(d_error/self.d_step,g_error,elapsed),
                     bar_length = 50)
