@@ -162,7 +162,7 @@ class BigGanTrainer():
                 self.logger.print_progress((batch_idx*self.d_step) % len(data_loader),
                     len(data_loader),
                     prefix = 'Train Iter: {}/{}'.format(self.iter, num_iter),
-                    suffix = 'DLoss: {:.6f} GLoss: {:.6f} Elapsed: {:.6f}'.format(d_error/self.d_step,g_error                  ),
+                    suffix = 'DLoss: {:.6f} GLoss: {:.6f} Elapsed: {:.6f}'.format(d_error/self.d_step,g_error,elapsed),
                     bar_length = 50)
             
             if verbose > 0 and self.iter % 100 == 0:

@@ -35,9 +35,9 @@ class NonLocalBlock(nn.Module):
 
         self.softmax  = nn.Softmax(dim=-1) #
 
-        nn.init.xavier_uniform(self.query_conv.weight)
-        nn.init.xavier_uniform(self.key_conv.weight)
-        nn.init.xavier_uniform(self.value_conv.weight)
+        nn.init.xavier_uniform_(self.query_conv.weight)
+        nn.init.xavier_uniform_(self.key_conv.weight)
+        nn.init.xavier_uniform_(self.value_conv.weight)
         
     def forward(self,x):
         """
@@ -94,8 +94,8 @@ class ResBlockGen(nn.Module):
         
         self.conv0 = nn.Conv2d(in_channels, out_channels, 3, stride, padding=padding)
         self.conv1 = nn.Conv2d(out_channels, out_channels, 3, stride, padding=padding)
-        nn.init.orthogonal(self.conv0.weight.data, 1.)
-        nn.init.orthogonal(self.conv1.weight.data, 1.)
+        nn.init.orthogonal_(self.conv0.weight.data, 1.)
+        nn.init.orthogonal_(self.conv1.weight.data, 1.)
 
         if sn:
             self.conv0 = nn.utils.spectral_norm(self.conv0)
@@ -142,8 +142,8 @@ class ResBlockDes(nn.Module):
         
         self.conv0 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=padding)
         self.conv1 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=padding)
-        nn.init.orthogonal(self.conv0.weight.data, 1.)
-        nn.init.orthogonal(self.conv1.weight.data, 1.)
+        nn.init.orthogonal_(self.conv0.weight.data, 1.)
+        nn.init.orthogonal_(self.conv1.weight.data, 1.)
 
         if sn:
             self.conv0 = nn.utils.spectral_norm(self.conv0)
@@ -153,7 +153,7 @@ class ResBlockDes(nn.Module):
         self.bypass = nn.Sequential()
         if stride != 1:
             self.bypass_conv = nn.Conv2d(in_channels,out_channels, 1, 1, padding=0)
-            nn.init.orthogonal(self.bypass_conv.weight.data)
+            nn.init.orthogonal_(self.bypass_conv.weight.data)
             self.bypass = nn.Sequential(
                 nn.utils.spectral_norm(self.bypass_conv),
                 nn.AvgPool2d(2, stride=stride, padding=0)
