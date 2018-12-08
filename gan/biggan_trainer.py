@@ -75,25 +75,23 @@ class BigGanTrainer():
         
         # 1.1 Train on Real Data
         prediction_real = self.discriminator(real_data, real_labels)
-        # Calculate error and backpropagate
         error_real = torch.nn.ReLU()(1.0 - prediction_real).mean()
-        error_real.backward()
 
         # 1.2 Train on Fake Data
-        
         z_class, z_class_one_hot = self._label_sampel()
         fake_data = self.generator(self._noise(N), z_class_one_hot).detach().to(self.device)
         
         prediction_fake = self.discriminator(fake_data, z_class)
         # Calculate error and backpropagate
         error_fake = torch.nn.ReLU()(1.0 + prediction_fake).mean()
-        error_fake.backward()
         
         # 1.3 Update weights with gradients
+        error = error_fake + error_real
+        error.backward()
         self.d_optimizer.step()
         
         # Return error and predictions for real and fake inputs
-        return error_real + error_fake, prediction_real, prediction_fake
+        return error, prediction_real, prediction_fake
     
     def _train_generator(self):
         N = self.batch_size
@@ -116,7 +114,8 @@ class BigGanTrainer():
         # Return error
         return error
         
-    def _train(self, num_iter, data_loader, verbose):
+    def _train(self, num_iter, verbose):
+        data_iter = iter(self.data_loader)
         start_time = time.time()
         d_total_error, g_total_error = 0.0, 0.0
         total_pred_real, total_pred_fake = 0, 0
@@ -127,7 +126,13 @@ class BigGanTrainer():
             # Train D
             d_error, d_pred_real, d_pred_fake  = 0, 0, 0 
             for _ in range(self.d_step):
-                real_batch, real_labels = next(data_loader)
+                
+                try:
+                    real_batch, real_labels = next(data_iter)
+                except:
+                    data_iter = iter(self.data_loader)
+                    real_batch, real_labels = next(data_iter)
+
                 real_data = real_batch.to(self.device)
                 real_labels = real_labels.to(self.device)
 
@@ -188,7 +193,8 @@ class BigGanTrainer():
         if self.test_noise is None:
             self.test_noise = self._noise(data_loader.batch_size)
         self.batch_size = data_loader.batch_size
-        self._train(num_iter, iter(data_loader), verbose)
+        self.data_loader = data_loader
+        self._train(num_iter, verbose)
         
 
 
