@@ -41,7 +41,10 @@ class Generator(nn.Module):
             ResBlockGen(2 * ch, 1 * ch, num_class)
         ])
         self.sync_bn = SynchronizedBatchNorm2d(1 * ch)
-        self.last = SpectralNorm(nn.Conv2d(1*ch, 3, 3, padding=1))
+        self.last = nn.Sequential(
+            SpectralNorm(nn.Conv2d(1*ch, 3, 3, padding=1)),
+            nn.Tanh()
+        )
     
     def forward(self, input, class_id):
         codes = torch.split(input, int(self.noise_size/self.num_blocks), 1)
