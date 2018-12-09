@@ -41,9 +41,9 @@ class NonLocalBlock(nn.Module):
 
         self.softmax  = nn.Softmax(dim=-1) #
 
-        init_conv(self.query_conv.weight)
-        init_conv(self.key_conv.weight)
-        init_conv(self.value_conv.weight)
+        init_conv(self.query_conv)
+        init_conv(self.key_conv)
+        init_conv(self.value_conv)
         
     def forward(self,x):
         """
