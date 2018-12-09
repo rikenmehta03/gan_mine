@@ -2,6 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
+def init_conv(conv):
+    nn.init.xavier_uniform_(conv.weight)
+    if conv.bias is not None:
+        conv.bias.data.zero_()
+
 class ConditionalBatchNorm(nn.Module):
     def __init__(self, in_channel, n_condition=148):
         super().__init__()
@@ -35,9 +41,9 @@ class NonLocalBlock(nn.Module):
 
         self.softmax  = nn.Softmax(dim=-1) #
 
-        nn.init.xavier_uniform_(self.query_conv.weight)
-        nn.init.xavier_uniform_(self.key_conv.weight)
-        nn.init.xavier_uniform_(self.value_conv.weight)
+        init_conv(self.query_conv.weight)
+        init_conv(self.key_conv.weight)
+        init_conv(self.value_conv.weight)
         
     def forward(self,x):
         """

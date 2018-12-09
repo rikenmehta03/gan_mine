@@ -4,6 +4,7 @@ import numpy as np
 
 from .blocks import ResBlockGen, ResBlockDes, NonLocalBlock
 from .sync_batchnorm import DataParallelWithCallback, SynchronizedBatchNorm2d
+from .spectral import spectral_norm, SpectralNorm
 
 def get_biggan(num_class, gpus = []):
     if len(gpus) > 0:
@@ -28,8 +29,8 @@ class Generator(nn.Module):
         self.num_classes = num_class
         self.ch = ch
         self.num_blocks = 6
-        self.linear = nn.utils.spectral_norm(nn.Linear(num_class, 128, bias=False))
-        self.dense = nn.utils.spectral_norm(nn.Linear(int(self.noise_size/self.num_blocks), 4 * 4 * 16 * ch))
+        self.linear = SpectralNorm(nn.Linear(num_class, 128, bias=False))
+        self.dense = SpectralNorm(nn.Linear(int(self.noise_size/self.num_blocks), 4 * 4 * 16 * ch))
 
         self.blocks = nn.ModuleList([
             ResBlockGen(16 * ch, 16 * ch, num_class),
@@ -40,7 +41,7 @@ class Generator(nn.Module):
             ResBlockGen(2 * ch, 1 * ch, num_class)
         ])
         self.sync_bn = SynchronizedBatchNorm2d(1 * ch)
-        self.last = nn.utils.spectral_norm(nn.Conv2d(1*ch, 3, 3, padding=1))
+        self.last = SpectralNorm(nn.Conv2d(1*ch, 3, 3, padding=1))
     
     def forward(self, input, class_id):
         codes = torch.split(input, int(self.noise_size/self.num_blocks), 1)
@@ -67,15 +68,15 @@ class Discriminator(nn.Module):
         self.ch = ch
         
         self.first_conv = nn.Sequential(
-            nn.utils.spectral_norm(nn.Conv2d(3, 1*ch, 3, padding=1)),
+            SpectralNorm(nn.Conv2d(3, 1*ch, 3, padding=1)),
             nn.ReLU(),
-            nn.utils.spectral_norm(nn.Conv2d(1*ch, 1*ch, 3, padding=1)),
+            SpectralNorm(nn.Conv2d(1*ch, 1*ch, 3, padding=1)),
             nn.AvgPool2d(2)
         )
 
         self.first_skip = nn.Sequential(
             nn.AvgPool2d(2),
-            nn.utils.spectral_norm(nn.Conv2d(3, 1*ch, 1)),
+            SpectralNorm(nn.Conv2d(3, 1*ch, 1)),
         )
 
         self.main = nn.Sequential(
@@ -91,8 +92,8 @@ class Discriminator(nn.Module):
 
         self.embedding = nn.Embedding(num_class, 16*ch)
         self.embedding.weight.data.uniform_(-0.1, 0.1)
-        self.embedding = nn.utils.spectral_norm(self.embedding)
-        self.linear = nn.utils.spectral_norm(nn.Linear(16*ch, 1))
+        self.embedding = spectral_norm(self.embedding)
+        self.linear = SpectralNorm(nn.Linear(16*ch, 1))
     
     def forward(self, input, class_id):
         out = self.first_conv(input)
