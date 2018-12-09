@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from .spectral import SpectralNorm
 
 
 def init_conv(conv):
@@ -104,8 +105,8 @@ class ResBlockGen(nn.Module):
         # nn.init.orthogonal_(self.conv1.weight.data, 1.)
 
         if sn:
-            self.conv0 = nn.utils.spectral_norm(self.conv0)
-            self.conv1 = nn.utils.spectral_norm(self.conv1)
+            self.conv0 = SpectralNorm(self.conv0)
+            self.conv1 = SpectralNorm(self.conv1)
 
         if number_class == 0:
             self.bn0 = nn.BatchNorm2d(in_channels)
@@ -118,7 +119,7 @@ class ResBlockGen(nn.Module):
         self.upsample = nn.Upsample(scale_factor=2)
         self.bypass = nn.Sequential(
             self.upsample,
-            nn.utils.spectral_norm(nn.Conv2d(in_channels, out_channels ,1, 1, 0))
+            SpectralNorm(nn.Conv2d(in_channels, out_channels ,1, 1, 0))
         )
 
     def forward(self, input, class_id=None):
@@ -152,8 +153,8 @@ class ResBlockDes(nn.Module):
         # nn.init.orthogonal_(self.conv1.weight.data, 1.)
 
         if sn:
-            self.conv0 = nn.utils.spectral_norm(self.conv0)
-            self.conv1 = nn.utils.spectral_norm(self.conv1)
+            self.conv0 = SpectralNorm(self.conv0)
+            self.conv1 = SpectralNorm(self.conv1)
 
         self.activation = nn.ReLU(True)
 
@@ -162,7 +163,7 @@ class ResBlockDes(nn.Module):
             bypass_conv = nn.Conv2d(in_channels,out_channels, 1, 1, padding=0)
             # nn.init.orthogonal_(bypass_conv.weight.data)
             self.bypass = nn.Sequential(
-                nn.utils.spectral_norm(bypass_conv),
+                SpectralNorm(bypass_conv),
                 nn.AvgPool2d(2, stride=stride, padding=0)
             )
 
