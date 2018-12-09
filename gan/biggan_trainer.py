@@ -129,7 +129,7 @@ class BigGanTrainer():
                     suffix = 'DLoss: {:.6f} GLoss: {:.6f} Elapsed: {}'.format(d_loss.item(),g_loss_fake.item(),elapsed),
                     bar_length = 50)
             
-            if verbose > 0 and self.iter % 1 == 0:
+            if verbose > 0 and self.iter % 100 == 0:
                 # Generate test images after training for log_iter
                 test_images = self.generator(self.test_noise, z_class_one_hot).detach()
 
