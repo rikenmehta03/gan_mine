@@ -131,7 +131,7 @@ class BigGanTrainer():
             
             if verbose > 0 and self.iter % 100 == 0:
                 # Generate test images after training for log_iter
-                test_images = self.generator(self.test_noise, z_class_one_hot).detach()
+                test_images = self.generator(self.test_noise, z_class_one_hot)
 
                 # Logging details.
                 t_del = time.time() - start_time
@@ -140,6 +140,7 @@ class BigGanTrainer():
                 # line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real/(self.d_step * 100.0 * self.batch_size),total_pred_fake/(self.d_step * 100.0 * self.batch_size), t_del)
                 line = 'Item: {}, Time: {:.8f}\n'.format(self.iter, t_del)
                 self.logger.log_iter(self, self.iter, line, self._denorm(test_images.data))
+                del test_images
 
             if self.iter % self.log_iter == 0:
                 state = {
