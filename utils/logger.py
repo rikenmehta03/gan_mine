@@ -38,8 +38,11 @@ class Logger():
         vutils.save_image(images,image_name, normalize=normalize) 
 
     def log_epoch(self, gan_object, state):
-        self.g_loss_array.append(state['d_error'])
-        self.d_loss_array.append(state['g_error'])
+        try:
+            self.g_loss_array.append(state['d_error'])
+            self.d_loss_array.append(state['g_error'])
+        except:
+            pass
         
         # self._log_text(state)
         # self._log_output_images(state, test_images)
