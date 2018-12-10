@@ -23,7 +23,7 @@ class BigGanTrainer():
         self.num_classes = num_classes
         self.d_step = d_step
         if test_size:
-            self.test_noise = Variable(self._noise(test_size), requires_grad=False) # Input: No. of noise samples
+            self.test_noise = Variable(torch.randn(test_size, 120).to(self.device), requires_grad=False) # Input: No. of noise samples
         else:
             self.test_noise = None
         if resume is not None:
@@ -155,9 +155,9 @@ class BigGanTrainer():
             self.iter += 1
 
     def trainer(self, data_loader, num_iter, verbose = 1, checkpoint=False):
-        if self.test_noise is None:
-            self.test_noise = Variable(self._noise(data_loader.batch_size), requires_grad=False)
         self.batch_size = data_loader.batch_size
+        if self.test_noise is None:
+            self.test_noise = Variable(torch.randn(self.batch_size, 120).to(self.device), requires_grad=False)
         self.data_loader = data_loader
         self._train_new(num_iter, verbose)
         

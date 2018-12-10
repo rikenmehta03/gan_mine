@@ -42,6 +42,7 @@ class Generator(nn.Module):
         ])
         self.sync_bn = SynchronizedBatchNorm2d(1 * ch)
         self.last = nn.Sequential(
+            nn.ReLU(True),
             SpectralNorm(nn.Conv2d(1*ch, 3, 3, padding=1)),
             nn.Tanh()
         )
