@@ -1,5 +1,5 @@
 import os
-
+import json
 import torch
 import numpy as np
 from scipy import linalg
@@ -122,7 +122,7 @@ def calculate_activation_statistics(dataloader, model, dims, device, verbose=Fal
     sigma = np.cov(act, rowvar=False)
     return mu, sigma
 
-def fid_score(s_dataloader, g_dataloader, dims=2048, device = torch.device('cpu')):
+def fid_score(s_dataloader, s_name, g_dataloader, dims=2048, device = torch.device('cpu')):
     """Calculation of FID.
     Params:
     -- s_dataloader  : pytorch dataloader for real images
@@ -133,14 +133,24 @@ def fid_score(s_dataloader, g_dataloader, dims=2048, device = torch.device('cpu'
     Returns:
     -- fid_value : FID
     """
-
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
 
     model = InceptionV3([block_idx]).to(device)
 
     m1, s1 = calculate_activation_statistics(g_dataloader, model, dims, device)
-    m2, s2 = calculate_activation_statistics(s_dataloader, model, dims, device)
+
+    with open('mu_sigma.json', 'r') as fp:
+        mu_sigma = json.load(fp)
+    
+    if s_name in mu_sigma:
+        _m_s = mu_sigma[s_name]
+        m2, s2 = _m_s[0], _m_s[1]
+    else:
+        m2, s2 = calculate_activation_statistics(s_dataloader, model, dims, device)
+        mu_sigma[s_name] = [m2, s2]
+        with open('mu_sigma.json', 'w') as fp:
+            json.dump(mu_sigma, fp)
+
     fid_value = calculate_frechet_distance(m1, s1, m2, s2)
 
     return fid_value
-
