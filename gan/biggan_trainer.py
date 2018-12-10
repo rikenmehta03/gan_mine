@@ -28,7 +28,7 @@ class BigGanTrainer():
         self.d_step = d_step
         self._build_model()
         if test_size:
-            self.test_noise = Variable(torch.randn(test_size, 120).to(self.device), requires_grad=False) # Input: No. of noise samples
+            self.test_noise = self._tensor2var(torch.randn(test_size, 120)) # Input: No. of noise samples
         else:
             self.test_noise = None
         if resume is not None:
@@ -65,6 +65,11 @@ class BigGanTrainer():
         out = (x + 1) / 2
         return out.clamp_(0, 1)
     
+    def _tensor2var(self, x, grad=False):
+        if torch.cuda.is_available():
+            x = x.cuda()
+        return Variable(x, requires_grad=grad)
+    
     def _label_sampel(self):
         label = torch.LongTensor(self.batch_size, 1).random_()%self.num_classes
         one_hot= torch.zeros(self.batch_size, self.num_classes).scatter_(1, label, 1)
@@ -77,7 +82,7 @@ class BigGanTrainer():
     def trainer(self, data_loader, num_iter, verbose = 1):
         self.batch_size = data_loader.batch_size
         if self.test_noise is None:
-            self.test_noise = Variable(torch.randn(self.batch_size, 120).to(self.device), requires_grad=False)
+            self.test_noise = self._tensor2var(torch.randn(self.batch_size, 120))
         self.data_loader = data_loader
 
         data_iter = iter(self.data_loader)

@@ -33,7 +33,7 @@ class Logger():
         filename = os.path.join(self.dir_name, 'model_{}.pth'.format(_iter))
         torch.save(state, filename)
 
-    def _log_output_images(self, _iter, images, normalize=True):
+    def _log_output_images(self, _iter, images, normalize=False):
         image_name = os.path.join(self.dir_name, str(_iter) +'_GIMG.png')
         vutils.save_image(images,image_name, normalize=normalize) 
 
