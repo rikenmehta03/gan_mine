@@ -1,4 +1,4 @@
-import os
+import os, sys
 import time
 import datetime
 import errno
@@ -9,19 +9,24 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from model import get_biggan
+
 
 class BigGanTrainer():
-    def __init__(self, discriminator, generator, d_optimizer, g_optimizer, num_classes, logger, log_iter=1000, d_step = 1, test_size = None, resume = None, device = torch.device('cpu')):
+    def __init__(self, num_classes, logger, log_iter=1000, d_step = 1, test_size = None, resume = None, device = torch.device('cpu')):
         self.device = device
-        self.generator = generator
-        self.discriminator = discriminator
-        self.d_optimizer = d_optimizer
-        self.g_optimizer = g_optimizer
+        # self.generator = generator
+        # self.discriminator = discriminator
+        # self.d_optimizer = d_optimizer
+        # self.g_optimizer = g_optimizer
         self.logger = logger
         self.log_iter = log_iter
         self.iter = 1
         self.num_classes = num_classes
         self.d_step = d_step
+        self._build_model()
         if test_size:
             self.test_noise = Variable(torch.randn(test_size, 120).to(self.device), requires_grad=False) # Input: No. of noise samples
         else:
@@ -51,6 +56,11 @@ class BigGanTrainer():
         self.d_optimizer.load_state_dict(checkpoint['d_optimizer'])
         print("loaded checkpoint {} (Epoch {})".format(resume, checkpoint['epoch']))
     
+    def _build_model(self):
+        self.discriminator, self.generator = get_biggan(self.num_classes, gpus=[0,1,2,3])
+        self.d_optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.discriminator.parameters()), lr=0.0004, betas = (0.0, 0.9))
+        self.g_optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.generator.parameters()), lr=0.0001, betas = (0.0, 0.9))
+
     def _denorm(self, x):
         out = (x + 1) / 2
         return out.clamp_(0, 1)
@@ -121,7 +131,7 @@ class BigGanTrainer():
             if verbose > 0:
                 elapsed = time.time() - start_time
                 elapsed = str(datetime.timedelta(seconds=elapsed))
-                self.logger.print_progress((batch_idx*self.d_step) % len(self.data_loader),
+                self.logger.print_progress((batch_idx*self.d_step) % len(self.data_loader)+1,
                     len(self.data_loader),
                     prefix = 'Train Iter: {}/{}'.format(self.iter, num_iter),
                     suffix = 'DLoss: {:.6f} GLoss: {:.6f} Elapsed: {}'.format(d_loss.item(),g_loss_fake.item(),elapsed),
