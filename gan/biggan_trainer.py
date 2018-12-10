@@ -50,13 +50,6 @@ class BigGanTrainer():
         self.g_optimizer.load_state_dict(checkpoint['g_optimizer'])
         self.d_optimizer.load_state_dict(checkpoint['d_optimizer'])
         print("loaded checkpoint {} (Epoch {})".format(resume, checkpoint['epoch']))
-
-    def _noise(self, num_samples):
-        '''
-        Generates a 1-d vector of gaussian sampled random values
-        '''
-        n = torch.randn(num_samples, 120).to(self.device) 
-        return n
     
     def _denorm(self, x):
         out = (x + 1) / 2
@@ -71,7 +64,12 @@ class BigGanTrainer():
         self.d_optimizer.zero_grad()
         self.g_optimizer.zero_grad()
         
-    def _train_new(self, num_iter, verbose):
+    def trainer(self, data_loader, num_iter, verbose = 1):
+        self.batch_size = data_loader.batch_size
+        if self.test_noise is None:
+            self.test_noise = Variable(torch.randn(self.batch_size, 120).to(self.device), requires_grad=False)
+        self.data_loader = data_loader
+
         data_iter = iter(self.data_loader)
         start_time = time.time()
         start_iter = self.iter
@@ -153,13 +151,3 @@ class BigGanTrainer():
                 self.logger.log_epoch(self, state)
             
             self.iter += 1
-
-    def trainer(self, data_loader, num_iter, verbose = 1, checkpoint=False):
-        self.batch_size = data_loader.batch_size
-        if self.test_noise is None:
-            self.test_noise = Variable(torch.randn(self.batch_size, 120).to(self.device), requires_grad=False)
-        self.data_loader = data_loader
-        self._train_new(num_iter, verbose)
-        
-
-
