@@ -15,7 +15,7 @@ def weights_init(m):
 
 def get_dcgan(image_size,in_ch,sn=False,device = torch.device('cpu')):
     discriminator = Discriminator_DCGAN(image_size, in_ch,sn).to(device)
-    generator = Generator_DCGAN(image_size, sn,out_ch = in_ch).to(device)
+    generator = Generator_DCGAN(image_size,in_ch,sn).to(device)
     discriminator.apply(weights_init)
     generator.apply(weights_init)
     return discriminator, generator
@@ -34,16 +34,14 @@ class Discriminator_DCGAN(nn.Module):
 
     def _make_discriminator(self):
         layers = []
+        conv = nn.Conv2d(self.in_ch,self.input_size,4,2,1,bias = False)
         if self.sn:
-            layers.append(
-                nn.Sequential(
-                    SpectralNorm(nn.Conv2d(self.in_ch,self.input_size,4,2,1,bias = False)),
-                    nn.LeakyReLU(0.2, inplace = True)))
-        else:
-            layers.append(
-                nn.Sequential(
-                    nn.Conv2d(self.in_ch,self.input_size,4,2,1,bias = False),
-                    nn.LeakyReLU(0.2, inplace = True)))
+            conv = SpectralNorm(conv)    
+
+        layers.append(
+            nn.Sequential(
+                conv,
+                nn.LeakyReLU(0.2, inplace = True)))
 
         cur_size = int(self.input_size/2)
         features = self.input_size
@@ -52,17 +50,15 @@ class Discriminator_DCGAN(nn.Module):
             features*= 2
             cur_size/=2
         
+        conv = nn.Conv2d(features, 1,4,1,0, bias=False)
         if self.sn:
-            layers.append(
-                nn.Sequential(
-                    SpectralNorm(nn.Conv2d(features,1,4,1,0, bias =False)),
-                    nn.Sigmoid()))
-        else:
-            layers.append(
-                nn.Sequential(
-                    nn.Conv2d(features,1,4,1,0, bias =False),
-                    nn.Sigmoid()))
-            
+            conv = SpectralNorm(conv)
+
+        layers.append(
+            nn.Sequential(
+                conv,
+                nn.Sigmoid()))
+        
         return nn.Sequential(*layers)
 
     def forward(self, x):
@@ -81,24 +77,23 @@ class Generator_DCGAN(nn.Module):
     def _make_generator(self):
         layers = []
         features = (2 ** (int(np.log2(self.output_size)/2))) * self.output_size
-        layers.append(BasicGenBlock(self.in_ch, features, 1, 0))
+        layers.append(BasicGenBlock(self.in_ch, features, self.sn, 1, 0))
         out_size = 4
         while out_size < int(self.output_size/2):
             layers.append(BasicGenBlock(features, int(features/2),self.sn))
             features = int(features/2)
             out_size*= 2
         
-        if self.sn:
-            layers.append(
-                nn.Sequential(
-                    SpectralNorm(nn.ConvTranspose2d(features, self.out_ch, 4, 2, 1, bias =False)),
-                    nn.Tanh()))
-        else:
-            layers.append(
-                nn.Sequential(
-                    nn.ConvTranspose2d(features, self.out_ch, 4, 2, 1, bias =False),
-                    nn.Tanh()))
+        conv = nn.ConvTranspose2d(features, self.out_ch, 4, 2, 1, bias =False)
 
+        if self.sn:
+            conv = SpectralNorm(conv)
+            
+        layers.append(
+            nn.Sequential(
+                conv,
+                nn.Tanh()))
+        
         return nn.Sequential(*layers) 
 
     def forward(self, x):
