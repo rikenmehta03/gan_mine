@@ -15,12 +15,12 @@ from model import get_biggan
 
 
 class BigGanTrainer():
-    def __init__(self, num_classes, logger, log_iter=1000, d_step = 1, test_size = None, resume = None, device = torch.device('cpu')):
-        self.device = device
-        # self.generator = generator
-        # self.discriminator = discriminator
-        # self.d_optimizer = d_optimizer
-        # self.g_optimizer = g_optimizer
+    def __init__(self, num_classes, logger, log_iter=1000, d_step = 1, test_size = None, resume = None, gpus = []):
+        if len(gpus) > 0:
+            self.device = torch.device('cuda:' + str(gpus[0]))
+        else:
+            self.device = torch.device('cpu')
+        self.gpus = gpus
         self.logger = logger
         self.log_iter = log_iter
         self.iter = 1
@@ -57,7 +57,7 @@ class BigGanTrainer():
         print("loaded checkpoint {} (Epoch {})".format(resume, checkpoint['epoch']))
     
     def _build_model(self):
-        self.discriminator, self.generator = get_biggan(self.num_classes, gpus=[0,1,2,3])
+        self.discriminator, self.generator = get_biggan(self.num_classes, gpus=self.gpus)
         self.d_optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.discriminator.parameters()), lr=0.0004, betas = (0.0, 0.9))
         self.g_optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.generator.parameters()), lr=0.0001, betas = (0.0, 0.9))
 

@@ -69,12 +69,18 @@ class NonLocalBlock(nn.Module):
 
 class BasicDiscBlock(nn.Module):
     
-    def __init__(self, in_channels, out_channels, stride = 2, padding = 1):
+    def __init__(self, in_channels, out_channels, sn=False, stride = 2, padding = 1):
         super(BasicDiscBlock,self).__init__()
-        self.main = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, 4, stride, padding, bias = False),
-            nn.BatchNorm2d(out_channels),
-            nn.LeakyReLU(0.2, inplace = True))
+        if sn:
+            self.main = nn.Sequential(
+                SpectralNorm(nn.Conv2d(in_channels, out_channels, 4, stride, padding, bias = False)),
+                nn.BatchNorm2d(out_channels),
+                nn.LeakyReLU(0.2, inplace = True))
+        else:
+            self.main = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, 4, stride, padding, bias = False),
+                nn.BatchNorm2d(out_channels),
+                nn.LeakyReLU(0.2, inplace = True))
     
     def forward(self, input):
         output  = self.main(input)
@@ -83,12 +89,18 @@ class BasicDiscBlock(nn.Module):
 
 class BasicGenBlock(nn.Module):
     
-    def __init__(self, in_channels, out_channels, stride = 2, padding = 1):
+    def __init__(self, in_channels, out_channels, sn=False, stride = 2, padding = 1):
         super(BasicGenBlock,self).__init__()
-        self.main = nn.Sequential(
-            nn.ConvTranspose2d(in_channels, out_channels, 4, stride, padding, bias = False),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(True))
+        if sn:
+            self.main = nn.Sequential(
+                SpectralNorm(nn.ConvTranspose2d(in_channels, out_channels, 4, stride, padding, bias = False)),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(True))
+        else:
+            self.main = nn.Sequential(
+                nn.ConvTranspose2d(in_channels, out_channels, 4, stride, padding, bias = False),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(True))
     
     def forward(self, input):
         output  = self.main(input)
