@@ -1,5 +1,5 @@
 from .blocks import BasicDiscBlock, BasicGenBlock
-from .spectral import SpectralNorm
+from .spectral import SpectralNorm, spectral_norm
 import torch
 import torch.nn as nn
 import numpy as np
@@ -36,7 +36,7 @@ class Discriminator_DCGAN(nn.Module):
         layers = []
         conv = nn.Conv2d(self.in_ch,self.input_size,4,2,1,bias = False)
         if self.sn:
-            conv = SpectralNorm(conv)    
+            conv = spectral_norm(conv)    
 
         layers.append(
             nn.Sequential(
@@ -52,7 +52,7 @@ class Discriminator_DCGAN(nn.Module):
         
         conv = nn.Conv2d(features, 1,4,1,0, bias=False)
         if self.sn:
-            conv = SpectralNorm(conv)
+            conv = spectral_norm(conv)
 
         layers.append(
             nn.Sequential(
@@ -87,7 +87,7 @@ class Generator_DCGAN(nn.Module):
         conv = nn.ConvTranspose2d(features, self.out_ch, 4, 2, 1, bias =False)
 
         if self.sn:
-            conv = SpectralNorm(conv)
+            conv = spectral_norm(conv)
             
         layers.append(
             nn.Sequential(
