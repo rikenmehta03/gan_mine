@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch.nn.functional as F
 
 class ConditionalBatchNorm(nn.Module):
     def __init__(self, in_channel, n_condition=148):
@@ -60,10 +61,15 @@ class NonLocalBlock(nn.Module):
 
 class BasicDiscBlock(nn.Module):
     
-    def __init__(self, in_channels, out_channels, stride = 2, padding = 1):
+    def __init__(self, in_channels, out_channels, sn, stride = 2, padding = 1):
         super(BasicDiscBlock,self).__init__()
+        if sn:
+            conv = nn.utils.spectral_norm(nn.Conv2d(in_channels, out_channels, 4, stride, padding, bias = False))
+        else:
+            conv = nn.Conv2d(in_channels, out_channels, 4, stride, padding, bias = False)
+        
         self.main = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, 4, stride, padding, bias = False),
+            conv,
             nn.BatchNorm2d(out_channels),
             nn.LeakyReLU(0.2, inplace = True))
     
@@ -74,10 +80,15 @@ class BasicDiscBlock(nn.Module):
 
 class BasicGenBlock(nn.Module):
     
-    def __init__(self, in_channels, out_channels, stride = 2, padding = 1):
+    def __init__(self, in_channels, out_channels, sn, stride = 2, padding = 1):
         super(BasicGenBlock,self).__init__()
+        if sn:
+            conv_t = nn.utils.spectral_norm(nn.ConvTranspose2d(in_channels, out_channels, 4, stride, padding, bias = False))
+        else:
+            conv_t = nn.ConvTranspose2d(in_channels, out_channels, 4, stride, padding, bias = False)
+        
         self.main = nn.Sequential(
-            nn.ConvTranspose2d(in_channels, out_channels, 4, stride, padding, bias = False),
+            conv_t,
             nn.BatchNorm2d(out_channels),
             nn.ReLU(True))
     
