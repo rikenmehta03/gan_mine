@@ -1,4 +1,5 @@
 import os
+import glob
 import torch
 from torchvision import transforms, datasets
 
@@ -15,7 +16,7 @@ class InputError(Exception):
         self.message = message
 
 class Data_Loader():
-    def __init__(self, dataset, image_path, image_size, batch_size, shuffle=True):
+    def __init__(self, dataset, image_path, image_size, batch_size, classes=None, shuffle=True):
         self.dataset = dataset
 
         if 'load_' + self.dataset not in dir(self):
@@ -24,9 +25,18 @@ class Data_Loader():
         self.path = image_path
 
         if self.dataset == 'lsun':
-            assert os.path.exists(os.path.join(self.path, 'bedroom_train_lmdb'))
+            if classes is None:
+                raise InputError(classes, 'Provide class list. Available options: [bedroom_train, bridge_train, church_outdoor_train]')
+            
+            for _c in classes:
+                assert os.path.exists(os.path.join(self.path, _c + '_lmdb'))
+            self.classes = classes
+            self.num_classes = len(self.classes)
         elif 'cifar' not in self.dataset:
             assert os.path.exists(os.path.join(self.path, self.dataset))
+            self.num_classes = len(glob.glob(os.path.join(self.path, self.dataset, '*')))
+        else:
+            self.num_classes = int(self.dataset.replace('cifar', ''))
 
         self.imsize = image_size
         self.batch = batch_size
@@ -43,9 +53,9 @@ class Data_Loader():
         transform = transforms.Compose(options)
         return transform
 
-    def load_lsun(self, classes=['bedroom_train']):
+    def load_lsun(self):
         transforms = self.transform(True, True, True)
-        dataset = datasets.LSUN(self.path, classes=classes, transform=transforms)
+        dataset = datasets.LSUN(self.path, classes=self.classes, transform=transforms)
         return dataset
     
     def load_imagenet(self):
@@ -65,7 +75,7 @@ class Data_Loader():
 
     def load_cifar10(self):
         transforms = self.transform(True, True, True)
-        dataset = datasets.CIFAR10(self.path, transform=transforms)
+        dataset = datasets.CIFAR10(self.path, transform=transforms, download=True)
         return dataset
     
     def load_cifar100(self):
