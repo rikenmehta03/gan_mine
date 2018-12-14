@@ -115,6 +115,10 @@ class GanTrainer():
 
         # Return error
         return error
+    
+    def _denorm(self, x):
+        out = (x + 1) / 2
+        return out.clamp_(0, 1)
         
     def _train(self, epoch, data_loader, verbose):
         start_time = time.time()
@@ -163,7 +167,7 @@ class GanTrainer():
                 line = '------------------ Iter: {} ------------------\n'.format(self.iter)
                 line += "Discriminator Average Error: {:.6f} , Generator Average Error: {:.6f}\n".format(d_total_error/200.0,g_total_error/100.0)
                 line += 'D(x): {:.4f}, D(G(z)): {:.4f}, Time: {:.8f}\n'.format(total_pred_real/(100.0 * data_loader.batch_size),total_pred_fake/(100.0 * data_loader.batch_size), t_del)
-                self.logger.log_iter(self, self.iter, line, test_images)
+                self.logger.log_iter(self, self.iter, line, self._denorm(test_images), normalize=True)
                 d_total_error, g_total_error = 0.0, 0.0
                 total_pred_real, total_pred_fake = 0, 0
             

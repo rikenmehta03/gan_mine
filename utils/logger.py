@@ -48,9 +48,9 @@ class Logger():
         # self._log_output_images(state, test_images)
         self._model_checkpoint(state)
     
-    def log_iter(self, gan_object, _iter, text, test_images):
+    def log_iter(self, gan_object, _iter, text, test_images, normalize=False):
         self._log_text(text)
-        self._log_output_images(_iter, test_images)
+        self._log_output_images(_iter, test_images, normalize)
     
     def print_progress(self, iteration, total, prefix='', suffix='', decimals=1, bar_length=100):
         """
