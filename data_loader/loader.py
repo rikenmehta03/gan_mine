@@ -80,7 +80,7 @@ class Data_Loader():
     
     def load_cifar100(self):
         transforms = self.transform(True, True, True)
-        dataset = datasets.CIFAR100(self.path, transform=transforms)
+        dataset = datasets.CIFAR100(self.path, transform=transforms, download=True)
         return dataset
 
     def loader(self):
