@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .spectral import SpectralNorm
+from .spectral import SpectralNorm, spectral_norm
 
 
 def init_conv(conv):
@@ -73,7 +73,7 @@ class BasicDiscBlock(nn.Module):
         super(BasicDiscBlock,self).__init__()
         if sn:
             self.main = nn.Sequential(
-                SpectralNorm(nn.Conv2d(in_channels, out_channels, 4, stride, padding, bias = False)),
+                spectral_norm(nn.Conv2d(in_channels, out_channels, 4, stride, padding, bias = False)),
                 nn.BatchNorm2d(out_channels),
                 nn.LeakyReLU(0.2, inplace = True))
         else:
@@ -93,7 +93,7 @@ class BasicGenBlock(nn.Module):
         super(BasicGenBlock,self).__init__()
         if sn:
             self.main = nn.Sequential(
-                SpectralNorm(nn.ConvTranspose2d(in_channels, out_channels, 4, stride, padding, bias = False)),
+                spectral_norm(nn.ConvTranspose2d(in_channels, out_channels, 4, stride, padding, bias = False)),
                 nn.BatchNorm2d(out_channels),
                 nn.ReLU(True))
         else:
