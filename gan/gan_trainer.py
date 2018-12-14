@@ -91,7 +91,7 @@ class GanTrainer():
             z = torch.randn(self.batch_size, self.noise_size, 1, 1).to(self.device)        
             fake_data = self.generator(z).detach().to(self.device)
 
-            self.reset_grad()
+            self.d_optimizer.zero_grad()
 
             d_out_real = self.discriminator(real_data)
             d_loss_real = self.d_loss(d_out_real, ones)
@@ -101,18 +101,17 @@ class GanTrainer():
             d_out_fake = self.discriminator(fake_data)
             d_loss_fake = self.d_loss(d_out_fake, zeros)
             d_loss_fake.backward()
-            D_G_z1 = d_out_fake.mean().item()
-
-            d_loss = d_loss_real + d_loss_fake
 
             self.d_optimizer.step()
+            d_loss = d_loss_real + d_loss_real
 
             # ================== Train G ================== #
+            self.g_optimizer.zero_grad()
+
+            fake_data = self.generator(z).to(self.device)
             g_out_fake = self.discriminator(fake_data)  # batch x n
             g_loss_fake = self.g_loss(g_out_fake, ones)
-            D_G_z2 = g_out_fake.mean().item()
 
-            self.reset_grad()
             g_loss_fake.backward()
             self.g_optimizer.step()
 
