@@ -57,7 +57,7 @@ class GanTrainer():
         '''
         Generates a 1-d vector of gaussian sampled random values
         '''
-        n = torch.randn(num_samples, self.generator.in_ch, 1, 1, device = self.device) 
+        n = torch.randn(num_samples, self.generator.noise_size, 1, 1, device = self.device) 
         return n
     
     def _ones_target(self, size):
