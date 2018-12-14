@@ -25,7 +25,7 @@ class GanTrainer():
         self.iter = 1
         self.noise_size = self.generator.in_ch
         if test_size:
-            self.test_noise = torch.randn(test_size, self.noise_size).to(self.device) # Input: No. of noise samples
+            self.test_noise = torch.randn(test_size, self.noise_size, 1, 1).to(self.device) # Input: No. of noise samples
         else:
             self.test_noise = None
 
@@ -65,7 +65,7 @@ class GanTrainer():
     def trainer(self, data_loader, num_iter, verbose = 1):
         self.batch_size = data_loader.batch_size
         if self.test_noise is None:
-            self.test_noise = torch.randn(self.batch_size, self.generator.in_ch).to(self.device)
+            self.test_noise = torch.randn(self.batch_size, self.generator.in_ch, 1, 1).to(self.device)
         
         self.data_loader = data_loader
         
@@ -88,7 +88,7 @@ class GanTrainer():
             real_data = real_batch.to(self.device)
 
             # Train D    
-            z = torch.randn(self.batch_size, self.noise_size).to(self.device)        
+            z = torch.randn(self.batch_size, self.noise_size, 1, 1).to(self.device)        
             fake_data = self.generator(z).detach().to(self.device)
 
             self.reset_grad()
