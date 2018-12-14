@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+from .blocks import BasicDiscBlock, BasicGenBlock
+
 
 def weights_init(m):
     classname = m.__class__.__name__
@@ -31,6 +33,7 @@ class Discriminator_DCGAN(nn.Module):
         self.sn = sn    
         self.in_ch = in_ch  
         self.discriminator = self._make_discriminator()
+        
 
     def _make_discriminator(self):
         layers = []
@@ -73,6 +76,7 @@ class Generator_DCGAN(nn.Module):
         self.in_noise = in_noise
         self.out_ch  = out_ch
         self.generator = self._make_generator()
+        
     
     def _make_generator(self):
         layers = []
