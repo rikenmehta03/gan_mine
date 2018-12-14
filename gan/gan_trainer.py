@@ -75,7 +75,7 @@ class GanTrainer():
         ones = torch.ones(self.batch_size, 1).to(self.device)
         zeros = torch.zeros(self.batch_size, 1).to(self.device)
 
-        for batch_idx in range(start_iter, num_iter):
+        for batch_idx in range(start_iter, num_iter+1):
             self.generator.train()
             self.discriminator.train()
             

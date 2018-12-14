@@ -17,7 +17,13 @@ def main(config):
     batch_size = config.batch_size
     num_iters = config.iters
 
-    data_loader = Data_Loader(config.dataset, config.data_path, img_size, batch_size, shuffle=True)
+    classes = None
+    if config.classes is not None:
+        classes = config.classes.split(',')
+    elif config.dataset == 'lsun':
+        raise Exception('Provide class list. Available options: bedroom_train,bridge_train,church_outdoor_train')
+
+    data_loader = Data_Loader(config.dataset, config.data_path, img_size, batch_size, classes=classes, shuffle=True)
     logger_name = '{}_{}'.format(config.dataset, config.model)
 
     if config.model=='dcgan':
@@ -28,7 +34,7 @@ def main(config):
         sa = config.sa
         device = torch.device(config.device)
         
-        discriminator, generator = get_dcgan(img_size,3, sn=True, device = device)
+        discriminator, generator = get_dcgan(img_size,3, sn=sn, device = device)
         d_optimizer = optim.Adam(discriminator.parameters(), lr=0.0002, betas = (0.5, 0.999))
         g_optimizer = optim.Adam(generator.parameters(), lr=0.0002, betas = (0.5, 0.999))
         
