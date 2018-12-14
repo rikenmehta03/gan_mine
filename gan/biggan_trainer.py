@@ -79,7 +79,7 @@ class BigGanTrainer():
         self.d_optimizer.zero_grad()
         self.g_optimizer.zero_grad()
         
-    def trainer(self, data_loader, num_iter, verbose = 1):
+    def train(self, data_loader, num_iter, verbose = 1):
         self.batch_size = data_loader.batch_size
         if self.test_noise is None:
             self.test_noise = self._tensor2var(torch.randn(self.batch_size, 120))

@@ -12,19 +12,14 @@ from torchvision import utils
 from data_loader import Data_Loader
 from evaluation_metric.inception import InceptionV3
 
+from parameters import get_parameters
+
 # Global: nmslib index parameters
 M = 100
 efC = 2000
 num_threads = 4
 space_name='l2'
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, default='cifar10', choices=['cifar10', 'celebhq', 'celeb', 'imagenet', 'lsun'])
-parser.add_argument('--path', type=str, default='dataset/')
-parser.add_argument('--img_size', type=int, default=64)
-parser.add_argument('--batch_size', type=int, default=512)
-parser.add_argument('--device', type=str, default='cuda')
-parser.add_argument('--out', type=str, default='indices/')
 
 def get_index():
     index = nmslib.init(method='hnsw', space=space_name, data_type=nmslib.DataType.DENSE_VECTOR)
@@ -48,9 +43,9 @@ def save_images(images, labels, batch_idx, batch_size, class_dict, path):
 
 def main(config):
     dataset = config.dataset
-    path = config.path
+    path = config.data_path
     img_size = config.img_size
-    out_dir = os.path.join(config.out, dataset)
+    out_dir = os.path.join(config.index_path, dataset)
     batch_size = config.batch_size
     if dataset == 'lsun':
         dataloader = Data_Loader(dataset, path, img_size, batch_size, classes=['bedroom_train', 'bridge_train', 'church_outdoor_train'], shuffle=False)
@@ -78,4 +73,5 @@ def main(config):
         json.dump(class_dict, fp)
 
 if __name__ == "__main__":
-    main(parser.parse_args())
+    config = get_parameters()
+    main(config)

@@ -62,7 +62,7 @@ class GanTrainer():
         self.d_optimizer.zero_grad()
         self.g_optimizer.zero_grad()
     
-    def trainer(self, data_loader, num_iter, verbose = 1):
+    def train(self, data_loader, num_iter, verbose = 1):
         self.batch_size = data_loader.batch_size
         if self.test_noise is None:
             self.test_noise = torch.randn(self.batch_size, self.generator.in_ch, 1, 1).to(self.device)
