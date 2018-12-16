@@ -80,6 +80,7 @@ class Evaluator():
             end = (batch_idx+1)*self.batch_size
             noise = self.noise[start:end]
             if self.model_type == 'dcgan':
+                print(noise.shape)
                 images = self.model(noise).detach()
             else:
                 num_classes = self.dataloader.num_classes
