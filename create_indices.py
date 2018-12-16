@@ -1,6 +1,5 @@
 import os, sys
 import json
-import argparse
 
 import nmslib
 import numpy as np

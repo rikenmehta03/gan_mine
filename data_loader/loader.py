@@ -82,10 +82,17 @@ class Data_Loader():
         transforms = self.transform(True, True, True)
         dataset = datasets.CIFAR100(self.path, transform=transforms, download=True)
         return dataset
+    
+    def load_folder(self):
+        transforms = self.transform(True, True, True)
+        dataset = datasets.ImageFolder(self.path+'/'+self.dataset, transform=transforms)
+        return dataset
 
     def loader(self):
-
-        dataset = getattr(self, 'load_' + self.dataset)()
+        if 'load_' + self.dataset in dir(self):
+            dataset = getattr(self, 'load_' + self.dataset)()
+        else:
+            dataset = self.load_folder()
         print('dataset',len(dataset))
         dataloader = torch.utils.data.DataLoader(dataset=dataset,
                                               batch_size=self.batch,
