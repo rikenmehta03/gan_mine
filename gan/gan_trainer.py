@@ -65,7 +65,7 @@ class GanTrainer():
     def train(self, data_loader, num_iter, verbose = 1):
         self.batch_size = data_loader.batch_size
         if self.test_noise is None:
-            self.test_noise = torch.randn(self.batch_size, self.generator.in_ch, 1, 1).to(self.device)
+            self.test_noise = torch.randn(self.batch_size, self.noise_size, 1, 1).to(self.device)
         
         self.data_loader = data_loader
         
