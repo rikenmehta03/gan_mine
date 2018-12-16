@@ -64,7 +64,7 @@ def main(config):
     for batch_idx, (images, labels) in enumerate(data_iter):
         batch = images.to(device)
         preds = model(batch)[0]
-        preds = preds.numpy().reshape((preds.shape[0], preds.shape[1]))
+        preds = preds.cpu().numpy().reshape((preds.shape[0], preds.shape[1]))
         index.addDataPointBatch(preds, range(batch_idx*batch_size, (batch_idx+1)*batch_size))
         class_dict = save_images(images, labels, batch_idx, batch_size, class_dict, out_dir)
         
