@@ -26,7 +26,7 @@ class Evaluator():
         self.batch_size = batch_size
         
         for _w in glob.glob(os.path.join(self.eval_dir, '*.pth')):
-            itr = int(_w.splt('/')[-1].split('_')[-1].split('.')[0])
+            itr = int(_w.split('/')[-1].split('_')[-1].split('.')[0])
             self.weights_dict[itr] = _w
         
         self.summary = {}
