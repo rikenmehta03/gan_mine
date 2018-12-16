@@ -1,4 +1,5 @@
 import os, sys
+import shutil
 import glob
 import json
 
@@ -14,7 +15,7 @@ from .fid_score import fid_score
 root_path = os.path.dirname(os.path.dirname(__file__))
 
 class Evaluator():
-    def __init__(self, model, dataloader, path, device, image_count=10240, batch_size=64):
+    def __init__(self, model, dataloader, path, device, image_count=64, batch_size=64):
         self.eval_dir = os.path.join(root_path, 'logs', path)
         self.model_type = path.split('_')[1]
         self.model = model
@@ -58,8 +59,8 @@ class Evaluator():
             self.noise = torch.randn(self.image_count, 120, device=self.device)
     
     def _save_images(self, images, batch_idx):
-        if not os.path.exists(os.path.join(self.eval_dir, self.dataset, 'images')):
-            os.makedirs(os.path.join(self.eval_dir, self.dataset, 'images'))
+        if not os.path.exists(os.path.join(self.eval_dir, 'images', self.dataset)):
+            os.makedirs(os.path.join(self.eval_dir, 'images', self.dataset))
 
         for i in range(images.shape[0]):
             idx = i + batch_idx*self.batch_size
@@ -87,13 +88,13 @@ class Evaluator():
             self._save_images(images, batch_idx)
 
     def _find_is(self):
-        data_loader = Data_Loader(self.dataset, self.eval_dir, self.dataloader.imsize, self.batch_size, shuffle=False)
+        data_loader = Data_Loader('images', self.eval_dir, self.dataloader.imsize, self.batch_size, shuffle=False)
         _is = inception_score(data_loader.loader(), True, True, 10)
         self.summary['inception_score'].append((self.iter, _is))
         self.summary['inception_done'].add(self.iter)
     
     def _find_fid(self):
-        data_loader = Data_Loader(self.dataset, self.eval_dir, self.dataloader.imsize, self.batch_size, shuffle=False)
+        data_loader = Data_Loader('images', self.eval_dir, self.dataloader.imsize, self.batch_size, shuffle=False)
         _fid = fid_score(self.dataloader.loader(), self.dataset, data_loader.loader(), device=self.device)
         self.summary['fid'].append((self.iter, _fid))
         self.summary['fid_done'].add(self.iter)
@@ -101,6 +102,11 @@ class Evaluator():
     def run(self):
 
         for itr, weights in self.weights_dict.items():
+            try:
+                shutil.rmtree(os.path.join(self.eval_dir, 'images'))
+            except:
+                pass
+
             find_is = itr not in self.summary['inception_done']
             find_fid = itr not in self.summary['fid_done']
 
@@ -114,6 +120,8 @@ class Evaluator():
                 self._find_fid()
 
             with open(os.path.join(self.eval_dir, 'summary.json'), 'w') as fp:
-                json.dump(self.summary, fp) 
+                json.dump(self.summary, fp)
+            
+
 
         
