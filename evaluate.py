@@ -22,11 +22,11 @@ def main(config):
     if model_type == 'dcgan':
         device = torch.device(device)
         sn = 'sn' in eval_folder
-        generator, _ = get_dcgan(img_size, 3, sn=sn,device=device)
+        _, generator= get_dcgan(img_size, 3, sn=sn,device=device)
     else:
         gpus = [int(device.split(':')[-1])]
         device = torch.device(device)
-        generator, _ = get_biggan(data_loader.num_classes, gpus=gpus)
+        _, generator = get_biggan(data_loader.num_classes, gpus=gpus)
     
     evaluator = Evaluator(generator, data_loader, eval_folder, device, batch_size=batch_size)
     evaluator.run()
