@@ -32,5 +32,6 @@ def get_parameters():
     # Path
     parser.add_argument('--data_path', type=str, default='../dataset')
     parser.add_argument('--index_path', type=str, default='../indices')
+    parser.add_argument('--eval_folder', type=str)
 
     return parser.parse_args()
