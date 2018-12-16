@@ -15,7 +15,7 @@ def weights_init(m):
 
 def get_dcgan(image_size,in_ch,sn=False,device = torch.device('cpu')):
     discriminator = Discriminator_DCGAN(image_size, in_ch,sn).to(device)
-    generator = Generator_DCGAN(image_size,in_ch,sn).to(device)
+    generator = Generator_DCGAN(image_size,sn).to(device)
     discriminator.apply(weights_init)
     generator.apply(weights_init)
     return discriminator, generator
@@ -66,11 +66,11 @@ class Discriminator_DCGAN(nn.Module):
         return output.view(-1, 1).squeeze(1)
 
 class Generator_DCGAN(nn.Module):
-    def __init__(self, output_size, in_ch = 100, sn=False, out_ch = 3):
+    def __init__(self, output_size, in_noise = 100, sn=False, out_ch = 3):
         super(Generator_DCGAN,self).__init__()
         self.output_size = output_size
         self.sn = sn
-        self.in_ch = in_ch
+        self.in_ch = in_noise
         self.out_ch  = out_ch
         self.generator = self._make_generator()
     

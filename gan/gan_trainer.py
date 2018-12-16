@@ -23,7 +23,7 @@ class GanTrainer():
         self.logger = logger
         self.log_iter = log_iter
         self.iter = 1
-        self.noise_size = self.generator.in_ch
+        self.noise_size = self.generator.in_noise
         if test_size:
             self.test_noise = torch.randn(test_size, self.noise_size, 1, 1).to(self.device) # Input: No. of noise samples
         else:

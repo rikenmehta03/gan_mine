@@ -34,7 +34,7 @@ def main(config):
         sa = config.sa
         device = torch.device(config.device)
         
-        discriminator, generator = get_dcgan(img_size,3, sn=sn, device = device)
+        discriminator, generator = get_dcgan(img_size, 3, sn=sn, device = device)
         d_optimizer = optim.Adam(discriminator.parameters(), lr=0.0002, betas = (0.5, 0.999))
         g_optimizer = optim.Adam(generator.parameters(), lr=0.0002, betas = (0.5, 0.999))
         
