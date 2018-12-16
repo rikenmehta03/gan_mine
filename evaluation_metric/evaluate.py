@@ -16,7 +16,7 @@ root_path = os.path.dirname(os.path.dirname(__file__))
 class Evaluator():
     def __init__(self, model, dataloader, path, device, image_count=10240, batch_size=64):
         self.eval_dir = os.path.join(root_path, 'logs', path)
-        self.model_type = path.split('_')[0]
+        self.model_type = path.split('_')[1]
         self.model = model
         self.dataloader = dataloader
         self.dataset = self.dataloader.dataset

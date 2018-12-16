@@ -17,7 +17,7 @@ def main(config):
     elif config.dataset == 'lsun':
         raise Exception('Provide class list. Available options: bedroom_train,bridge_train,church_outdoor_train')
     
-    model_type = eval_folder.split('_')[0]
+    model_type = eval_folder.split('_')[1]
     data_loader = Data_Loader(config.dataset, config.data_path, img_size, batch_size, classes=classes, shuffle=False)
     if model_type == 'dcgan':
         device = torch.device(device)
