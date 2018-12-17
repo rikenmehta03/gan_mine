@@ -19,8 +19,8 @@ class Data_Loader():
     def __init__(self, dataset, image_path, image_size, batch_size, classes=None, shuffle=True):
         self.dataset = dataset
 
-        if 'load_' + self.dataset not in dir(self):
-            raise InputError(self.dataset, 'Select valid dataset. Available options: [lsun, celeb, celebhq, cifar10, cifar100, imagenet]')
+        # if 'load_' + self.dataset not in dir(self):
+        #     raise InputError(self.dataset, 'Select valid dataset. Available options: [lsun, celeb, celebhq, cifar10, cifar100, imagenet]')
 
         self.path = image_path
 
