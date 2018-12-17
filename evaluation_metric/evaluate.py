@@ -38,8 +38,8 @@ class Evaluator():
         
         if self.summary.get('image_count', 0) != image_count:
             self.summary = {
-                'inception_done' : set(),
-                'fid_done': set(),
+                'inception_done' : [],
+                'fid_done': [],
                 'inception_score': [],
                 'fid': [],
                 'image_count': image_count
@@ -91,13 +91,13 @@ class Evaluator():
         data_loader = Data_Loader('images', self.eval_dir, self.dataloader.imsize, self.batch_size, shuffle=False)
         _is = inception_score(data_loader.loader(), True, True, 10)
         self.summary['inception_score'].append((self.iter, _is))
-        self.summary['inception_done'].add(self.iter)
+        self.summary['inception_done'].append(self.iter)
     
     def _find_fid(self):
         data_loader = Data_Loader('images', self.eval_dir, self.dataloader.imsize, self.batch_size, shuffle=False)
         _fid = fid_score(self.dataloader.loader(), self.dataset, data_loader.loader(), device=self.device)
         self.summary['fid'].append((self.iter, _fid))
-        self.summary['fid_done'].add(self.iter)
+        self.summary['fid_done'].append(self.iter)
     
     def run(self):
         weights_iter = sorted(self.weights_dict.items(), key=lambda tup: tup[0])
