@@ -73,7 +73,7 @@ class Evaluator():
 
     def _generate(self, weights):
         self._load_weights(weights)
-        num_batches = int(self.batch_size / self.image_count)
+        num_batches = int(self.image_count / self.batch_size)
         
         for batch_idx in range(num_batches):
             start = batch_idx*self.batch_size
