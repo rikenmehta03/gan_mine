@@ -48,7 +48,7 @@ def inception_score(dataloader, device, resize=False, splits=1):
         batchv = Variable(batch).to(device)
         batch_size_i = batch.size()[0]
 
-        preds[i*batch_size:i*batch_size + batch_size_i] = get_pred(batchv).cpu()
+        preds[i*batch_size:i*batch_size + batch_size_i] = get_pred(batchv)
 
     # Now compute the mean kl-div
     split_scores = []
