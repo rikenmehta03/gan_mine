@@ -64,7 +64,7 @@ class Evaluator():
 
         for i in range(images.shape[0]):
             idx = i + batch_idx*self.batch_size
-            utils.save_image(images[i], os.path.join(self.eval_dir, 'images', str(idx)+'.jpeg'))
+            utils.save_image(images[i], os.path.join(self.eval_dir, 'images', self.dataset, str(idx)+'.jpeg'))
     
     def _label_sampel(self, num_classes):
         label = torch.LongTensor(self.batch_size, 1).random_()%num_classes
