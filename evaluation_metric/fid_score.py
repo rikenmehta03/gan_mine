@@ -8,6 +8,8 @@ from torch.nn.functional import adaptive_avg_pool2d
 
 from .inception import InceptionV3
 
+curr_dir = os.path.dirname(__file__)
+
 def get_activations(dataloader, model, dims, device, verbose=False):
     """Calculates the activations of the pool_3 layer for all images.
     Params:
@@ -139,7 +141,7 @@ def fid_score(s_dataloader, s_name, g_dataloader, dims=2048, device = torch.devi
 
     m1, s1 = calculate_activation_statistics(g_dataloader, model, dims, device)
 
-    with open('mu_sigma.json', 'r') as fp:
+    with open(os.path.join(curr_dir, 'mu_sigma.json'), 'r') as fp:
         mu_sigma = json.load(fp)
     
     if s_name in mu_sigma:
