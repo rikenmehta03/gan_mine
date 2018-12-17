@@ -27,7 +27,7 @@ def get_activations(dataloader, model, dims, device, verbose=False):
     """
     model.eval()
     
-    data_iter = iter(dataloader)
+    data_iter = dataloader
     n_batches = len(data_iter)
     batch_size = dataloader.batch_size
     n_used_imgs = n_batches * batch_size
@@ -138,11 +138,13 @@ def fid_score(s_dataloader, s_name, g_dataloader, dims=2048, device = torch.devi
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
 
     model = InceptionV3([block_idx]).to(device)
-
+print(type(mu_sigma))
     m1, s1 = calculate_activation_statistics(g_dataloader, model, dims, device)
 
-    with open(os.path.join(curr_dir, 'mu_sigma.json'), 'r') as fp:
-        mu_sigma = json.load(fp)
+    if os.path.exists(os.path.join(curr_dir, 'mu_sigma.npy')):
+        mu_sigma = np.load(os.path.join(curr_dir, 'mu_sigma.npy'))[()]
+    else:
+        mu_sigma = {}
     
     if s_name in mu_sigma:
         _m_s = mu_sigma[s_name]
@@ -150,9 +152,8 @@ def fid_score(s_dataloader, s_name, g_dataloader, dims=2048, device = torch.devi
     else:
         m2, s2 = calculate_activation_statistics(s_dataloader, model, dims, device)
         mu_sigma[s_name] = [m2, s2]
-        with open('mu_sigma.json', 'w') as fp:
-            json.dump(mu_sigma, fp)
+        np.save(os.path.join(curr_dir, 'mu_sigma.npy'), mu_sigma)
 
     fid_value = calculate_frechet_distance(m1, s1, m2, s2)
 
-    return fid_value
+    return 0
