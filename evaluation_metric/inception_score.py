@@ -9,7 +9,7 @@ from torchvision.models.inception import inception_v3
 import numpy as np
 from scipy.stats import entropy
 
-def inception_score(dataloader, cuda=True, resize=False, splits=1):
+def inception_score(dataloader, device, resize=False, splits=1):
     """Computes the inception score of the generated images imgs
     dataloader -- Torch dataloader for the images
     cuda -- whether or not to run on GPU
@@ -31,9 +31,9 @@ def inception_score(dataloader, cuda=True, resize=False, splits=1):
         dtype = torch.FloatTensor
 
     # Load inception model
-    inception_model = inception_v3(pretrained=True, transform_input=False).type(dtype)
+    inception_model = inception_v3(pretrained=True, transform_input=False).to(device)
     inception_model.eval()
-    up = nn.Upsample(size=(299, 299), mode='bilinear').type(dtype)
+    up = nn.Upsample(size=(299, 299), mode='bilinear').to(device)
     def get_pred(x):
         if resize:
             x = up(x)
@@ -44,11 +44,11 @@ def inception_score(dataloader, cuda=True, resize=False, splits=1):
     preds = np.zeros((N, 1000))
 
     for i, (batch, _) in enumerate(dataloader, 0):
-        batch = batch.type(dtype)
-        batchv = Variable(batch)
+        batch = batch.to(device)
+        batchv = Variable(batch).to(device)
         batch_size_i = batch.size()[0]
 
-        preds[i*batch_size:i*batch_size + batch_size_i] = get_pred(batchv)
+        preds[i*batch_size:i*batch_size + batch_size_i] = get_pred(batchv).cpu()
 
     # Now compute the mean kl-div
     split_scores = []

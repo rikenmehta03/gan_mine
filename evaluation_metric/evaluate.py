@@ -89,7 +89,7 @@ class Evaluator():
 
     def _find_is(self):
         data_loader = Data_Loader('images', self.eval_dir, self.dataloader.imsize, self.batch_size, shuffle=False)
-        _is = inception_score(data_loader.loader(), True, True, 10)
+        _is = inception_score(data_loader.loader(), self.device, True, 10)
         self.summary['inception_score'].append((self.iter, _is))
         self.summary['inception_done'].append(self.iter)
     
