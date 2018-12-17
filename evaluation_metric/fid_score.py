@@ -151,6 +151,8 @@ def fid_score(s_dataloader, s_name, g_dataloader, dims=2048, device = torch.devi
         m2, s2 = _m_s[0], _m_s[1]
     else:
         m2, s2 = calculate_activation_statistics(s_dataloader, model, dims, device)
+        if os.path.exists(os.path.join(curr_dir, 'mu_sigma.npy')):
+            mu_sigma = np.load(os.path.join(curr_dir, 'mu_sigma.npy'))[()]
         mu_sigma[s_name] = [m2, s2]
         np.save(os.path.join(curr_dir, 'mu_sigma.npy'), mu_sigma)
 
