@@ -156,4 +156,4 @@ def fid_score(s_dataloader, s_name, g_dataloader, dims=2048, device = torch.devi
 
     fid_value = calculate_frechet_distance(m1, s1, m2, s2)
 
-    return 0
+    return fid_value
