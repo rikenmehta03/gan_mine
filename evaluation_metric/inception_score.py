@@ -18,9 +18,9 @@ def inception_score(dataloader, cuda=True, resize=False, splits=1):
     """
     N = len(dataloader.dataset)
     batch_size = dataloader.batch_size
-
+    
     assert batch_size > 0
-    assert N > batch_size
+    assert N >= batch_size
 
     # Set up dtype
     if cuda:
