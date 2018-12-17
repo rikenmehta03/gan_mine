@@ -130,6 +130,11 @@ class Evaluator():
             s += 'Fid: {}\n'.format(best_fid_score[1])
             s += 'at Iteration: {}'.format(best_fid_score[0])
             fp.write(s)
+        
+        self.summary['best_fid'] = best_fid_score
+        self.summary['best_inception'] = best_inception_score
+        with open(os.path.join(self.eval_dir, 'summary.json'), 'w') as fp:
+            json.dump(self.summary, fp)
 
 
 
