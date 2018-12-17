@@ -100,8 +100,8 @@ class Evaluator():
         self.summary['fid_done'].add(self.iter)
     
     def run(self):
-
-        for itr, weights in self.weights_dict.items():
+        weights_iter = sorted(self.weights_dict.items(), key=lambda tup: tup[0])
+        for itr, weights in weights_iter:
             try:
                 shutil.rmtree(os.path.join(self.eval_dir, 'images'))
             except:
