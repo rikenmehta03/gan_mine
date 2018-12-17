@@ -15,7 +15,7 @@ from .fid_score import fid_score
 root_path = os.path.dirname(os.path.dirname(__file__))
 
 class Evaluator():
-    def __init__(self, model, dataloader, path, device, image_count=64, batch_size=64):
+    def __init__(self, model, dataloader, path, device, image_count=10240, batch_size=64):
         self.eval_dir = os.path.join(root_path, 'logs', path)
         self.model_type = path.split('_')[1]
         self.model = model
@@ -121,7 +121,16 @@ class Evaluator():
 
             with open(os.path.join(self.eval_dir, 'summary.json'), 'w') as fp:
                 json.dump(self.summary, fp)
-            
+
+        best_inception_score = sorted(self.summary['inception_score'], key=lambda k: k[1][0])[-1]
+        best_fid_score = sorted(self.summary['fid'], key=lambda k: k[1])[0]
+        with open(os.path.join(self.eval_dir, 'summary.txt'), 'r') as fp:
+            s = 'Inception score: {}\n'.format(best_inception_score[1][0])
+            s += 'at Iteration: {}\n\n'.format(best_inception_score[0])
+            s += 'Fid: {}\n'.format(best_fid_score[1])
+            s += 'at Iteration: {}'.format(best_fid_score[0])
+            fp.write(s)
+
 
 
         
