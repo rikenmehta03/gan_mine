@@ -138,7 +138,7 @@ def fid_score(s_dataloader, s_name, g_dataloader, dims=2048, device = torch.devi
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
 
     model = InceptionV3([block_idx]).to(device)
-print(type(mu_sigma))
+
     m1, s1 = calculate_activation_statistics(g_dataloader, model, dims, device)
 
     if os.path.exists(os.path.join(curr_dir, 'mu_sigma.npy')):
