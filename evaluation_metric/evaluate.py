@@ -124,7 +124,7 @@ class Evaluator():
 
         best_inception_score = sorted(self.summary['inception_score'], key=lambda k: k[1][0])[-1]
         best_fid_score = sorted(self.summary['fid'], key=lambda k: k[1])[0]
-        with open(os.path.join(self.eval_dir, 'summary.txt'), 'r') as fp:
+        with open(os.path.join(self.eval_dir, 'summary.txt'), 'w') as fp:
             s = 'Inception score: {}\n'.format(best_inception_score[1][0])
             s += 'at Iteration: {}\n\n'.format(best_inception_score[0])
             s += 'Fid: {}\n'.format(best_fid_score[1])
