@@ -8,7 +8,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
-from .statnetworks import StatisticsNetworkDCGAN
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from model import StatisticNetworkDCGAN
 
 class MINE_trainer():
     
