@@ -4,10 +4,12 @@ import os
 import glob
 import torch
 import numpy as np
+from scipy.stats import truncnorm
+from torchvision import utils
 
 def truncated_z_sample(batch_size, truncation=1., seed=None):
-  state = None if seed is None else np.random.RandomState(seed)
-  values = truncnorm.rvs(-2, 2, size=(batch_size, dim_z), random_state=state)
+  state = None
+  values = truncnorm.rvs(-2, 2, size=(batch_size, 120), random_state = state)
   return truncation * values
 
 def interpolate(A, B, num_interps):
@@ -26,11 +28,11 @@ def load_weights(model,weights):
 
 def _save_images(eval_dir, images, batch_idx):
     if not os.path.exists(os.path.join(eval_dir, 'images', 'samples')):
-        os.makedirs(os.path.join(eval_dir, 'images', dataset))
+        os.makedirs(os.path.join(eval_dir, 'images', 'samples'))
     
     for i in range(images.shape[0]):
-            idx = i + batch_idx*self.batch_size
-            utils.save_image(images[i], os.path.join(self.eval_dir, 'images', self.dataset, str(idx)+'.jpeg'))
+            idx = i + batch_idx * batch_size
+            utils.save_image(images[i], os.path.join(eval_dir, 'images', 'samples', str(idx)+'.jpeg'))
 
 parser = argparse.ArgumentParser()
 # Model hyper-parameters
