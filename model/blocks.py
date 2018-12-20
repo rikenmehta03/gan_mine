@@ -75,11 +75,13 @@ class BasicDiscBlock(nn.Module):
             self.main = nn.Sequential(
                 spectral_norm(nn.Conv2d(in_channels, out_channels, 4, stride, padding, bias = False)),
                 nn.BatchNorm2d(out_channels),
+                nn.Dropout2d(0.5),
                 nn.LeakyReLU(0.2, inplace = True))
         else:
             self.main = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels, 4, stride, padding, bias = False),
                 nn.BatchNorm2d(out_channels),
+                nn.Dropout2d(0.5),
                 nn.LeakyReLU(0.2, inplace = True))
     
     def forward(self, input):
