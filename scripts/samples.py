@@ -1,11 +1,15 @@
+
 import argparse
-from model import get_biggan, get_dcgan
 import os
 import glob
 import torch
 import numpy as np
+import sys
 from scipy.stats import truncnorm
 from torchvision import utils
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from model import get_biggan, get_dcgan
 
 def truncated_z_sample(batch_size, truncation=1., seed=None):
   state = None
@@ -26,13 +30,12 @@ def load_weights(model,weights):
     model.load_state_dict(checkpoint['g_state'])
     return model
 
-def _save_images(eval_dir, images, batch_idx):
-    if not os.path.exists(os.path.join(eval_dir, 'images', 'samples')):
-        os.makedirs(os.path.join(eval_dir, 'images', 'samples'))
+def save_images(eval_dir, images, model_idx):
+    if not os.path.exists(os.path.join(eval_dir, 'images', 'samples', str(model_idx))):
+        os.makedirs(os.path.join(eval_dir, 'images', 'samples',str(model_idx)))
     
     for i in range(images.shape[0]):
-            idx = i + batch_idx * batch_size
-            utils.save_image(images[i], os.path.join(eval_dir, 'images', 'samples', str(idx)+'.jpeg'))
+            utils.save_image(images[i], os.path.join(eval_dir, 'images', 'samples', str(i)+'.jpeg'))
 
 parser = argparse.ArgumentParser()
 # Model hyper-parameters
@@ -43,18 +46,18 @@ parser.add_argument('--device', type=str, default='cuda')
 parser.add_argument('--gpus', type=str, default='0', help='gpuids eg: 0,1,2,3')
 
 # Path
-parser.add_argument('--eval_folder', type=str)
+parser.add_argument('--eval_dir', type=str)
 
 config = parser.parse_args()
 
 img_size = config.img_size
 batch_size = config.batch_size
-eval_folder = config.eval_folder
+eval_dir = config.eval_dir
 device = config.device
-model_type = eval_folder.split('_')[1]
+model_type = eval_dir.split('_')[1]
 if model_type == 'dcgan':
     device = torch.device(device)
-    sn = 'sn' in eval_folder
+    sn = 'sn' in eval_dir
     _, generator= get_dcgan(img_size, 3, sn=sn,device=device)
 else:
     gpus = [int(device.split(':')[-1])]
@@ -62,11 +65,15 @@ else:
     _, generator = get_biggan(2, gpus=gpus)
 
 weights_dict = []
-root_path = os.path.dirname(os.path.dirname(__file__))
-eval_dir = os.path.join(root_path, 'logs', eval_folder)
-model_files = sorted(glob.glob(os.path.join(eval_dir, '*.pth')))[-config.no_model:]
-
+root_path = os.path.dirname(__file__)
+eval_dir = os.path.join(root_path, 'logs', eval_dir)
+all_model_files = sorted(glob.glob(os.path.join(eval_dir, '*.pth')))
+model_files = all_model_files[-min(len(all_model_files) ,config.no_model):]
+print(root_path)
+print(eval_dir)
 for i, model_fl in enumerate(model_files):
+    print(i)
     noise  = get_noise(batch_size,device)
     generator = load_weights(generator, model_fl)
     images = generator(noise)
+    save_images(eval_dir, images, i)

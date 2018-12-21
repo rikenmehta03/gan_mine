@@ -29,7 +29,6 @@ class ConditionalBatchNorm(nn.Module):
         return gamma * out + beta
 
 class NonLocalBlock(nn.Module):
-    """ Non local block"""
     def __init__(self,in_dim,activation=F.relu):
         super(NonLocalBlock,self).__init__()
         self.chanel_in = in_dim
@@ -47,13 +46,6 @@ class NonLocalBlock(nn.Module):
         init_conv(self.value_conv)
         
     def forward(self,x):
-        """
-            inputs :
-                x : input feature maps( B X C X W X H)
-            returns :
-                out : self attention value + input feature 
-                attention: B X N X N (N is Width*Height)
-        """
         m_batchsize,C,width ,height = x.size()
         proj_query  = self.query_conv(x).view(m_batchsize,-1,width*height).permute(0,2,1) # B X CX(N)
         proj_key =  self.key_conv(x).view(m_batchsize,-1,width*height) # B X C x (*W*H)
