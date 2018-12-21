@@ -54,7 +54,7 @@ class BigGanTrainer():
         self.discriminator.load_state_dict(checkpoint['d_state'])
         self.g_optimizer.load_state_dict(checkpoint['g_optimizer'])
         self.d_optimizer.load_state_dict(checkpoint['d_optimizer'])
-        print("loaded checkpoint {} (Epoch {})".format(resume, checkpoint['epoch']))
+        print("loaded checkpoint {} (Epoch {})".format(resume, checkpoint['iter']))
     
     def _build_model(self):
         self.discriminator, self.generator = get_biggan(self.num_classes, gpus=self.gpus)
