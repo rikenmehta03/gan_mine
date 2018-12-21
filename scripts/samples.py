@@ -15,10 +15,13 @@ import torchvision.utils as vutils
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from model import get_biggan, get_dcgan
 
-def truncated_z_sample(batch_size, noise_size ,truncation=1., seed=None):
-  state = None
-  values = truncnorm.rvs(-2, 2, size=(batch_size, noise_size, 1, 1), random_state = state)
-  return torch.Tensor(truncation * values)
+def truncated_z_sample(model, batch_size, noise_size ,truncation=0.4, seed=None):
+    state = None
+    if model == 'dcgan':
+        values = truncnorm.rvs(-2, 2, size=(batch_size, noise_size, 1, 1), random_state = state)
+    else:
+        values = truncnorm.rvs(-2, 2, size=(batch_size, noise_size), random_state = state)
+    return torch.Tensor(truncation * values)
 
 def generate_latent_walk(G, i, img_size ,number, device):
     # Code adapted from https://github.com/Zeleni9/pytorch-wgan/blob/master/models/dcgan.py
@@ -47,11 +50,13 @@ def generate_latent_walk(G, i, img_size ,number, device):
         utils.save_image(grid, path +'/interpolated_{}.png'.format(str(number).zfill(3)))
         number -=1
 
-def get_noise(batch_size, noise_size ,device, truncated = False):
-    if not truncated:
+def get_noise(model,batch_size, noise_size, trunc, trunc_threshold ,device):
+    if trunc:
+        return truncated_z_sample(model, batch_size, noise_size, trunc_threshold).to(device) 
+    elif model == 'dcgan':
         return torch.randn(batch_size, noise_size, 1, 1).to(device)
     else:
-        return truncated_z_sample(batch_size, noise_size).to(device)
+        return torch.randn(batch_size, noise_size).to(device)
 
 def load_weights(model,weights):
     checkpoint = torch.load(weights)
@@ -74,7 +79,8 @@ parser.add_argument('--batch_size', type=int, default = 32)
 parser.add_argument('--device', type=str, default='cuda')
 parser.add_argument('--interps', type=int, default=5)
 parser.add_argument('--gpus', type=str, default='0', help='gpuids eg: 0,1,2,3')
-
+parser.add_argument('--trunc', type=bool, default = 'False')
+parser.add_argument('--trunc_threshold', type=float, default = 0.4)
 # Path
 parser.add_argument('--eval_dir', type=str)
 
@@ -84,6 +90,8 @@ img_size = config.img_size
 batch_size = config.batch_size
 eval_dir = config.eval_dir
 device = config.device
+trunc = config.trunc
+trunc_threshold = config.trunc_threshold
 model_type = eval_dir.split('_')[1]
 if model_type == 'dcgan':
     device = torch.device(device)
@@ -103,7 +111,7 @@ all_model_files = sorted(glob.glob(os.path.join(eval_dir, '*.pth')))
 model_files = all_model_files[-min(len(all_model_files) ,config.no_model):]
 
 for i, model_fl in enumerate(model_files):
-    noise  = get_noise(batch_size, noise_size,device)
+    noise  = get_noise(model_type, batch_size, noise_size, trunc, trunc_threshold, device)
     generator = load_weights(generator, model_fl)
     images = generator(noise)
     save_images(eval_dir, images, i)
