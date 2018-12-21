@@ -58,8 +58,8 @@ class BigGanTrainer():
     
     def _build_model(self):
         self.discriminator, self.generator = get_biggan(self.num_classes, gpus=self.gpus)
-        self.d_optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.discriminator.parameters()), lr=0.0004, betas = (0.0, 0.9))
-        self.g_optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.generator.parameters()), lr=0.0001, betas = (0.0, 0.9))
+        self.d_optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.discriminator.parameters()), lr=0.0002, betas = (0.0, 0.9)) #0.0004
+        self.g_optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.generator.parameters()), lr=0.00005, betas = (0.0, 0.9))    #0.0001
 
     def _denorm(self, x):
         out = (x + 1) / 2
@@ -70,7 +70,7 @@ class BigGanTrainer():
             x = x.cuda()
         return Variable(x, requires_grad=grad)
     
-    def _label_sampel(self):
+    def _label_sample(self):
         label = torch.LongTensor(self.batch_size, 1).random_()%self.num_classes
         one_hot= torch.zeros(self.batch_size, self.num_classes).scatter_(1, label, 1)
         return label.squeeze(1).to(self.device), one_hot.to(self.device) 
@@ -107,7 +107,7 @@ class BigGanTrainer():
             # apply Gumbel Softmax
             z = torch.randn(self.batch_size, 120).to(self.device)
 
-            z_class, z_class_one_hot = self._label_sampel()
+            z_class, z_class_one_hot = self._label_sample()
  
             fake_images = self.generator(z, z_class_one_hot)
             d_out_fake = self.discriminator(fake_images, z_class)
@@ -121,7 +121,7 @@ class BigGanTrainer():
             # ================== Train G and gumbel ================== #
             # Create random noise
             z = torch.randn(self.batch_size, 120).to(self.device)
-            z_class, z_class_one_hot = self._label_sampel()
+            z_class, z_class_one_hot = self._label_sample()
             
             fake_images = self.generator(z, z_class_one_hot)
 

@@ -84,7 +84,7 @@ class Data_Loader():
         return dataset
     
     def load_folder(self):
-        transforms = self.transform(True, True, True)
+        transforms = self.transform(True, True, False)
         dataset = datasets.ImageFolder(self.path+'/'+self.dataset, transform=transforms)
         return dataset
 
