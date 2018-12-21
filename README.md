@@ -1,4 +1,4 @@
-# Generative Adversarial Networks(GAN) with MINE: Mutual Information Neural Estimation
+# Exploring GAN: Improving training techniques
 
 ## Environment setup & dependency installation
 ```
@@ -10,24 +10,37 @@ This commands will setup a virtual environment using python3 and install the req
 
 ## Repository structure
 Every module will be a directory containing `__init__.py` file and other subfiles. Below are the initial modules we need to write. 
-- **gan** : This module contains `GanTrainer` class in `gan_trainer.py` file
-- **utils** : This module will contains all the utility functions or classes we write. For example `Logger` class in `logger.py` file.
-- **model** : This module will contain all the different CNN architecure we try for discriminator or generator. Try to keep discriminator and generator classes in separate files. 
+- **gan** : This module contains trainer classes including generic gan trainer and BigGAN trainer. 
+- **utils** : This module contains utility functions or classes we write. For example `Logger` class in `logger.py` file.
+- **model** : This module contain all the different architecure we tried for discriminator or generator. 
+- **data_loader** : This module provides wrapper for data-loader class for different datasets.
+- **evaluation_metric** : Utility function and evaluation class used to evaluate various results.
+- **scripts** : Ad-hoc scripts written to perform various experiments 
 
-We will add  `__init__.py` file in every module and import all the class of that module (See `/gan/__init__.py` for refrence), so that we can directly import them in `train.py` or `evaluate.py` like this: 
+## Training script
+Run these commands to run the training scripts
 ```
-from gan import GanTrainer
+python main.py --model dcgan --dataset imagenet --data_path dataset/ --batch_size 64 --iters 100000 --log_iter 1000 --sn true --device cuda #train with spactral normalization
+python main.py --dataset imagenet --data_path /var/www/dataset --batch_size 64 --iters 100000 --log_iter 1000 --sn true --device cuda --gpus 0,1,2,3 #Train with data parallel
 ```
 
-## Naming conventions & style guide
-- use `CapitalCase` for class names
-- use `smallcase` for module names
-- use `snake_case` for variable and file names. 
-- Use sensible names for variables. Do not use variable names like `c`, `i`, `p` unless untill those are very trivial. 
+## Evaluation script
+Training process logs the sample images every 500 iterations. Model is saved according to the parameter `log_iter`. The results are saved in logs folder. To run the evaluation on the results, run the command 
+```
+evaluate.py --dataset imagenet --eval_folder imagenet_dcgan_sn_64_bs_64_18_12_2018_16:59:50 --device cuda --data_path dataset/ 
+```
 
-## Contributing to git repository
-- Make sure to pull the latest code before you start working on anything to avoid headache of merge conflicts.  
-- Add proper commit message. One practice I saw was to add commit type along with the commit message like this: 
-    - `[UPDATE] Modify so and so class in module foo`
-    - `[ADD] Created so and so class in module foo`
-    - `[FIX] NoneType bug fix in so and so class`
+All other configurable parameters are available in `parameters.py` file.
+
+## Results
+- DCGAN on celeb-HQ
+
+![celebhq](/samples/celebhq.jpeg)
+
+- DCGAN on ImageNet*
+
+![imagenet](/samples/imagenet.jpeg)
+
+- BigGAN on LSUN (Church outdoor & Bridge)
+
+![lsun](/samples/lsun.jpeg)
