@@ -29,6 +29,7 @@ class ConditionalBatchNorm(nn.Module):
         return gamma * out + beta
 
 class NonLocalBlock(nn.Module):
+    # Adapted from https://github.com/heykeetae/Self-Attention-GAN/blob/master/sagan_models.py
     def __init__(self,in_dim,activation=F.relu):
         super(NonLocalBlock,self).__init__()
         self.chanel_in = in_dim
