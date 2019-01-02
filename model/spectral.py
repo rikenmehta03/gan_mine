@@ -1,3 +1,5 @@
+# Adapted from https://github.com/heykeetae/Self-Attention-GAN/blob/master/spectral.py
+
 import torch
 from torch.optim.optimizer import Optimizer, required
 
